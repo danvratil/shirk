@@ -3,8 +3,8 @@
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
-#include <QNetworkReply>
 #include <QPointer>
+#include <QJsonValue>
 
 #include <memory>
 #include <vector>
@@ -12,6 +12,7 @@
 
 #include "team.h"
 #include "api.h"
+#include "compat.h"
 
 namespace Core
 {
@@ -28,11 +29,11 @@ public:
     NetworkDispatcher(Config &config);
     ~NetworkDispatcher() override;
 
-    template<typename Msg, typename Obj>
-    void sendRequest(Msg &&msg, Obj *obj, ResponseCallback &&func);
+    template<typename Msg, typename Obj, typename Func>
+    void sendRequest(Msg &&msg, Obj *obj, Func &&func);
 
-    template<typename Msg, typename Obj>
-    void sendRequest(Team *team, Msg &&msg, Obj *obj, ResponseCallback &&func);
+    template<typename Msg, typename Obj, typename Func>
+    void sendRequest(Team *team, Msg &&msg, Obj *obj, Func &&func);
 
 private:
     struct Request {
@@ -51,22 +52,24 @@ private:
     QNetworkAccessManager mNam;
 
     QVector<Request> mPendingRequests;
-    std::vector<std::unique_ptr<QNetworkReply>> mRunningRequests;
+    std::vector<std::unique_ptr<QNetworkReply, DeleteLater>> mRunningRequests;
 };
 
 
-template<typename Msg, typename Obj>
-void NetworkDispatcher::sendRequest(Msg &&msg, Obj *obj, ResponseCallback &&func)
+template<typename Msg, typename Obj, typename Func>
+void NetworkDispatcher::sendRequest(Msg &&msg, Obj *obj, Func &&func)
 {
-    const auto url = urlForEndpoint(Msg::endpoint, msg.serialize());
-    enqueueRequest(Msg::method, url, obj, std::move(func));
+    sendRequest(nullptr, std::move(msg), obj, std::move(func));
 }
 
-template<typename Msg, typename Obj>
-void NetworkDispatcher::sendRequest(Team *team, Msg &&msg, Obj *obj, ResponseCallback &&func)
+template<typename Msg, typename Obj, typename Func>
+void NetworkDispatcher::sendRequest(Team *team, Msg &&msg, Obj *obj, Func &&func)
 {
-    const auto url = urlForEndpoint(Msg::endpoint, msg.serialize(), team->accessToken());
-    enqueueRequest(Msg::method, url, obj, std::move(func));
+    const auto url = urlForEndpoint(Msg::endpoint, msg.serialize(), team ? std::optional<QString>(team->accessToken()) : std::nullopt);
+    enqueueRequest(Msg::method, url, obj, [obj, func = std::move(func)](const QJsonValue &val) mutable {
+            if (obj) func(val);
+    });
 }
 
 }
+
