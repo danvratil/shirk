@@ -1,17 +1,33 @@
 #pragma once
 
+#include <QAbstractListModel>
+
+#include <memory>
+
 namespace Core {
 
 class Config;
+class TeamController;
 
-class TeamsModel
+class TeamsModel : public QAbstractListModel
 {
 public:
-    TeamsModel(Config &config);
+    enum Roles {
+        TeamRole = Qt::UserRole + 1,
+    };
 
+    TeamsModel(Config &config);
+    ~TeamsModel() override;
+
+    void loadControllers();
+
+    QHash<int, QByteArray> roleNames() const override;
+    int rowCount(const QModelIndex &parent = {}) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
 
 private:
     Config &mConfig;
+    std::vector<std::unique_ptr<TeamController>> mControllers;
 
 };
 

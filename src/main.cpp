@@ -32,5 +32,10 @@ int main(int argc, char **argv)
                 window.activateWindow();
             });
 
+    // Delayed invocation once the app is running
+    QMetaObject::invokeMethod(&app, [&teams]() {
+        teams.loadControllers();
+    }, Qt::QueuedConnection);
+
     return app.exec();
 }

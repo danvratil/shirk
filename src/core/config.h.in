@@ -1,0 +1,52 @@
+#pragma once
+
+#include <QString>
+
+namespace Core
+{
+
+static const QString clientId = QStringLiteral("580306296802.703627838403");
+static const QString clientSecret = QStringLiteral("962e864041c76730417b7b9f327f29b7");
+
+static const QStringList scopes = {
+    QStringLiteral("channels:history"),
+    QStringLiteral("channels:read"),
+    QStringLiteral("channels:write"),
+    QStringLiteral("chat:write:user"),
+    QStringLiteral("groups:history"),
+    QStringLiteral("groups:read"),
+    QStringLiteral("groups:write"),
+    QStringLiteral("im:history"),
+    QStringLiteral("im:read"),
+    QStringLiteral("im:write"),
+    QStringLiteral("mpim:history"),
+    QStringLiteral("mpim:read"),
+    QStringLiteral("mpim:write"),
+    QStringLiteral("emoji:read"),
+    QStringLiteral("files:read"),
+    QStringLiteral("files:write:user"),
+    QStringLiteral("pins:read"),
+    QStringLiteral("pin:write"),
+    QStringLiteral("reactions:read"),
+    QStringLiteral("reactions:write"),
+    QStringLiteral("remote_files:read"),
+    QStringLiteral("remote_files:share"),
+    QStringLiteral("links:read"),
+    QStringLiteral("links:write"),
+    QStringLiteral("dnd:read"),
+    QStringLiteral("dnd:write"),
+    QStringLiteral("reminders:read"),
+    QStringLiteral("reminders:write"),
+    QStringLiteral("search:read"),
+    QStringLiteral("stars:read"),
+    QStringLiteral("stars:write"),
+    QStringLiteral("users:read"),
+    QStringLiteral("users:read.email"),
+    QStringLiteral("users:write"),
+    QStringLiteral("users.profile:read"),
+    QStringLiteral("users.profile:write"),
+    QStringLiteral("team:read")
+};
+
+}
+
