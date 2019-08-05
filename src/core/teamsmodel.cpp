@@ -47,3 +47,12 @@ QVariant TeamsModel::data(const QModelIndex &index, int role) const
             return {};
     }
 }
+
+TeamController *TeamsModel::teamForIndex(const QModelIndex &index) const
+{
+    if (index.row() < 0 || index.row() >= mControllers.size()) {
+        return nullptr;
+    }
+
+    return mControllers[index.row()].get();
+}

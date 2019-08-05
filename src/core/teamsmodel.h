@@ -21,6 +21,8 @@ public:
 
     void loadControllers();
 
+    TeamController *teamForIndex(const QModelIndex &index) const;
+
     QHash<int, QByteArray> roleNames() const override;
     int rowCount(const QModelIndex &parent = {}) const override;
     QVariant data(const QModelIndex &index, int role) const override;

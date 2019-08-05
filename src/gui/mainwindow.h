@@ -2,9 +2,12 @@
 
 #include <QMainWindow>
 
+#include "ui_mainwindow.h"
+
 namespace Core {
 class Config;
 class TeamsModel;
+class TeamController;
 }
 
 namespace Gui {
@@ -18,6 +21,11 @@ public:
     void restoreFromConfig();
 
 private:
+    void initializePageStack();
+    void openTeamPage(Core::TeamController &controller);
+    void openAddTeamPage();
+
+    Ui::MainWindow ui;
     Core::Config &mConfig;
     Core::TeamsModel &mTeams;
 };
