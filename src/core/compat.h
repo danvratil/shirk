@@ -2,6 +2,8 @@
 
 #include <qglobal.h>
 
+#include <memory>
+
 #if QT_VERSION < QT_VERSION_CHECK(5, 13, 0)
     #define Q_DISABLE_MOVE(Class) \
         Class(Class &&) = delete; \
@@ -19,3 +21,9 @@ struct DeleteLater {
         obj->deleteLater();
     }
 };
+
+template<typename T, typename ... Args>
+auto make_unique_qobject(Args && ... args)
+{
+    return std::unique_ptr<T, DeleteLater>(new T(std::forward<Args>(args) ...));
+}

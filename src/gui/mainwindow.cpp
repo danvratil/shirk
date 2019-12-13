@@ -3,6 +3,7 @@
 #include "core/config.h"
 #include "core/teamsmodel.h"
 #include "core/compat.h"
+#include "core/teamcontroller.h"
 
 #include "addteampage.h"
 #include "teampage.h"
@@ -62,10 +63,10 @@ void MainWindow::openTeamPage(Core::TeamController &team)
 void MainWindow::openAddTeamPage()
 {
     ui.addTeamAction->setEnabled(false);
-    std::unique_ptr<AddTeamPage, DeleteLater> page(new AddTeamPage(mConfig));
+    auto page = make_unique_qobject<AddTeamPage>(mConfig, mTeams);
     ui.stackedWidget->setCurrentIndex(ui.stackedWidget->addWidget(page.get()));
     connect(page.get(), &AddTeamPage::teamAdded,
-            this, [this, page = std::move(page)](Core::TeamController *newTeam) {
+            this, [this, page = std::move(page)](Core::TeamController *newTeam) mutable {
                 ui.stackedWidget->removeWidget(page.get());
 
                 openTeamPage(*newTeam);
