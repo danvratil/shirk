@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QDebug>
 
 #include <functional>
 #include <optional>
@@ -14,7 +15,7 @@ class QTcpSocket;
 
 namespace Core {
 
-class NetworkDispatcher;
+class Environment;
 namespace API {
 class OAuthAccessResponse;
 }
@@ -35,7 +36,7 @@ public:
         Error
     };
 
-    AuthController(NetworkDispatcher &dispatcher);
+    AuthController(Environment &environment);
     ~AuthController();
 
     void start();
@@ -44,7 +45,7 @@ public:
 
     // TODO: Sucks, have start() take a callback maybe?
     std::unique_ptr<Team> team() { return std::move(mTeam); };
-    Error error() const;
+    Error error() const { return mError; }
 
 Q_SIGNALS:
     void stateChanged(State state);
@@ -71,7 +72,9 @@ private:
 
     std::unique_ptr<QTcpServer> mServer;
 
-    NetworkDispatcher &mDispatcher;
+    Environment &mEnv;
 };
 
 }
+
+QDebug operator<<(QDebug, Core::AuthController::State);

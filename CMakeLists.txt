@@ -4,7 +4,8 @@ set(SHIRK_VERSION "0.1")
 project(shirk VERSION ${SHIRK_VERSION})
 
 # Setup
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
@@ -16,6 +17,7 @@ set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${CMAKE_MODULE_PATH})
 
 # Includes
 include(ECMSetupVersion)
+include(ECMQtDeclareLoggingCategory)
 include(FeatureSummary)
 
 ecm_setup_version(PROJECT

@@ -1,18 +1,25 @@
 #include "teamcontroller.h"
+#include "config.h"
+#include "environment.h"
 #include "team.h"
 
 using namespace Core;
 
-TeamController::TeamController(Config &config, std::unique_ptr<Team> team)
-    : mConfig(config)
+TeamController::TeamController(Environment &environment, std::unique_ptr<Team> team)
+    : mEnv(environment)
     , mTeam(std::move(team))
 {}
 
 TeamController::~TeamController() = default;
 
-Team *TeamController::team() const
+const Team &TeamController::team() const
 {
-    return mTeam.get();
+    return *mTeam.get();
+}
+
+Team &TeamController::team()
+{
+    return *mTeam.get();
 }
 
 TeamController::Status TeamController::status() const
@@ -38,4 +45,10 @@ void TeamController::quit()
 {
     // TODO
     setStatus(Status::Disconnected);
+}
+
+void TeamController::updateConfig()
+{
+    auto settings = mEnv.config.settingsForTeam(mTeam->id());
+    mTeam->updateConfig(settings.get());
 }

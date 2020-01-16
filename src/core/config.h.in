@@ -26,7 +26,7 @@ static const QStringList scopes = {
     QStringLiteral("files:read"),
     QStringLiteral("files:write:user"),
     QStringLiteral("pins:read"),
-    QStringLiteral("pin:write"),
+    QStringLiteral("pins:write"),
     QStringLiteral("reactions:read"),
     QStringLiteral("reactions:write"),
     QStringLiteral("remote_files:read"),

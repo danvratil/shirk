@@ -2,11 +2,12 @@
 
 #include <QMainWindow>
 
+#include "core/environment.h"
+#include "core/teamsmodel.h"
 #include "ui_mainwindow.h"
 
 namespace Core {
-class Config;
-class TeamsModel;
+class Environment;
 class TeamController;
 }
 
@@ -16,7 +17,7 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    MainWindow(Core::Config &config, Core::TeamsModel &teams);
+    MainWindow(Core::Environment &environment, Core::TeamsModel &teams);
 
     void restoreFromConfig();
 
@@ -26,7 +27,7 @@ private:
     void openAddTeamPage();
 
     Ui::MainWindow ui;
-    Core::Config &mConfig;
+    Core::Environment &mEnv;
     Core::TeamsModel &mTeams;
 };
 

@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 
 #include "core/config.h"
+#include "core/environment.h"
 #include "core/teamsmodel.h"
 #include "core/compat.h"
 #include "core/teamcontroller.h"
@@ -10,19 +11,17 @@
 
 using namespace Gui;
 
-MainWindow::MainWindow(Core::Config &config, Core::TeamsModel &teams)
+MainWindow::MainWindow(Core::Environment &environment, Core::TeamsModel &teams)
     : QMainWindow()
-    , mConfig(config)
+    , mEnv(environment)
     , mTeams(teams)
 {
     ui.setupUi(this);
 
-    ui.teamListView->setModel(&teams);
+    ui.teamListView->setModel(&mTeams);
     connect(ui.teamListView->selectionModel(), &QItemSelectionModel::currentChanged,
             this, [this](const auto &index) {
-                const auto team = mTeams.teamForIndex(index);
-                Q_ASSERT(team);
-                openTeamPage(*team);
+                openTeamPage(mTeams.controllerForIndex(index));
             });
     connect(ui.addTeamAction, &QAction::triggered, this, &MainWindow::openAddTeamPage);
 }
@@ -49,11 +48,11 @@ TeamPage *findTeamPage(QStackedWidget *pages, Core::TeamController &team)
 
 }
 
-void MainWindow::openTeamPage(Core::TeamController &team)
+void MainWindow::openTeamPage(Core::TeamController &controller)
 {
-    auto page = findTeamPage(ui.stackedWidget, team);
+    auto page = findTeamPage(ui.stackedWidget, controller);
     if (!page) {
-        page = new TeamPage(team, mConfig);
+        page = new TeamPage(controller, mEnv);
         ui.stackedWidget->addWidget(page);
     }
 
@@ -63,13 +62,12 @@ void MainWindow::openTeamPage(Core::TeamController &team)
 void MainWindow::openAddTeamPage()
 {
     ui.addTeamAction->setEnabled(false);
-    auto page = make_unique_qobject<AddTeamPage>(mConfig, mTeams);
+    auto page = make_unique_qobject<AddTeamPage>(mTeams, mEnv);
     ui.stackedWidget->setCurrentIndex(ui.stackedWidget->addWidget(page.get()));
     connect(page.get(), &AddTeamPage::teamAdded,
-            this, [this, page = std::move(page)](Core::TeamController *newTeam) mutable {
+            this, [this, page = std::move(page)](Core::Team &newTeam) mutable {
                 ui.stackedWidget->removeWidget(page.get());
-
-                openTeamPage(*newTeam);
+                openTeamPage(mTeams.controllerForTeam(newTeam));
                 ui.addTeamAction->setEnabled(true);
 
                 page.reset();

@@ -6,6 +6,12 @@ set(shirk_gui_SRCS
     teampage.cpp
 )
 
+ecm_qt_declare_logging_category(shirk_gui_SRCS
+    HEADER gui_debug.h
+    IDENTIFIER LOG_GUI
+    CATEGORY_NAME cz.dvratil.shirk.gui
+)
+
 add_library(shirk_gui STATIC ${shirk_gui_SRCS})
 target_include_directories(shirk_gui PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>

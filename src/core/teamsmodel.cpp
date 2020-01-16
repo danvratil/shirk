@@ -1,20 +1,22 @@
 #include "teamsmodel.h"
 #include "teamcontroller.h"
 #include "team.h"
+#include "environment.h"
+#include "config.h"
 
 Q_DECLARE_METATYPE(Core::Team*)
 
 using namespace Core;
 
-TeamsModel::TeamsModel(Config &config)
-    : mConfig(config)
-{}
-
 TeamsModel::~TeamsModel() = default;
 
-void TeamsModel::loadControllers()
+void TeamsModel::loadControllers(Environment &env)
 {
-
+    const auto teamIds = env.config.teamIds();
+    for (const auto &teamId : teamIds) {
+        auto config = env.config.settingsForTeam(teamId);
+        mControllers.push_back(std::make_unique<TeamController>(env, Team::fromSettings(config.get())));
+    }
 }
 
 QHash<int, QByteArray> TeamsModel::roleNames() const
@@ -38,21 +40,41 @@ QVariant TeamsModel::data(const QModelIndex &index, int role) const
     const auto &controller = mControllers[index.row()];
     switch (role) {
         case Qt::DisplayRole:
-            return controller->team()->name();
+            return controller->team().name();
         case Qt::DecorationRole:
-            return controller->team()->icon();
+            return controller->team().icon();
         case TeamRole:
-            return QVariant::fromValue(controller->team());
+            return QVariant::fromValue(&controller->team());
         default:
             return {};
     }
 }
 
-TeamController *TeamsModel::teamForIndex(const QModelIndex &index) const
+TeamController &TeamsModel::controllerForIndex(const QModelIndex &index) const
 {
-    if (index.row() < 0 || index.row() >= mControllers.size()) {
-        return nullptr;
-    }
+    Q_ASSERT(index.row() >= 0 && index.row() < mControllers.size());
 
-    return mControllers[index.row()].get();
+    return *mControllers[index.row()].get();
 }
+
+
+TeamController &TeamsModel::controllerForTeam(const Team &team) const
+{
+
+    const auto ctrl = std::find_if(mControllers.cbegin(), mControllers.cend(),
+                                  [&team](const auto &ctrl) {
+                                      return ctrl->team().id() == team.id();
+                                  });
+    Q_ASSERT(ctrl != mControllers.cend());
+
+    return *ctrl->get();
+}
+
+void TeamsModel::addTeam(std::unique_ptr<TeamController> team)
+{
+    beginInsertRows({}, mControllers.size(), mControllers.size());
+    team->updateConfig();
+    mControllers.push_back(std::move(team));
+    endInsertRows();
+}
+

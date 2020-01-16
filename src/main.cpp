@@ -3,7 +3,9 @@
 #include <KDBusService>
 
 #include "core/config.h"
+#include "core/environment.h"
 #include "core/teamsmodel.h"
+#include "core/networkdispatcher.h"
 #include "gui/mainwindow.h"
 
 #include "shirk_version.h"
@@ -20,8 +22,15 @@ int main(int argc, char **argv)
     KDBusService uniqueApp(KDBusService::Unique);
 
     Core::Config config;
-    Core::TeamsModel teams(config);
-    Gui::MainWindow window(config, teams);
+    Core::NetworkDispatcher networkDispatcher{config};
+
+    Core::Environment environment{
+        config,
+        networkDispatcher
+    };
+
+    Core::TeamsModel teams;
+    Gui::MainWindow window(environment, teams);
     window.restoreFromConfig();
 
     QObject::connect(&uniqueApp, &KDBusService::activateRequested,
@@ -33,8 +42,8 @@ int main(int argc, char **argv)
             });
 
     // Delayed invocation once the app is running
-    QMetaObject::invokeMethod(&app, [&teams]() {
-        teams.loadControllers();
+    QMetaObject::invokeMethod(&app, [&environment, &teams]() {
+        teams.loadControllers(environment);
     }, Qt::QueuedConnection);
 
     return app.exec();

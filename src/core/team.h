@@ -37,8 +37,9 @@ public:
     QString accessToken() const;
     QIcon icon() const;
 
-    std::unique_ptr<Team> fromSettings(const QSettings &settings);
+    static std::unique_ptr<Team> fromSettings(QSettings *settings);
     void updateFromTeamInfo(const API::TeamInfoResponse &team);
+    void updateConfig(QSettings *settings);
 
 Q_SIGNALS:
     void teamChanged();

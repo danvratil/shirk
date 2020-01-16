@@ -7,7 +7,7 @@
 namespace Core {
 
 class Team;
-class Config;
+class Environment;
 
 class TeamController : public QObject
 {
@@ -23,7 +23,7 @@ public:
     };
     Q_ENUM(Status)
 
-    TeamController(Config &config, std::unique_ptr<Team> team);
+    TeamController(Environment &environment, std::unique_ptr<Team> team);
     ~TeamController() override;
 
     /**
@@ -35,11 +35,12 @@ public:
      */
     void quit();
 
-
-    Team *team() const;
+    const Team &team() const;
+    Team &team();
 
     Status status() const;
 
+    void updateConfig();
 
 Q_SIGNALS:
     void statusChanged(Status status);
@@ -49,7 +50,7 @@ protected:
     void setStatus(Status status);
 
 private:
-    Config &mConfig;
+    Environment &mEnv;
     std::unique_ptr<Team> mTeam;
 
     Status mStatus = Status::Disconnected;

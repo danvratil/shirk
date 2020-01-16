@@ -13,6 +13,12 @@ set(shirk_core_SRCS
     teamsmodel.cpp
 )
 
+ecm_qt_declare_logging_category(shirk_core_SRCS
+    HEADER core_debug.h
+    IDENTIFIER LOG_CORE
+    CATEGORY_NAME cz.dvratil.shirk.core
+)
+
 add_library(shirk_core STATIC ${shirk_core_SRCS})
 target_link_libraries(shirk_core
     PUBLIC

@@ -2,15 +2,15 @@
 
 #include <QWidget>
 
+#include "core/teamsmodel.h"
 #include "ui_addteampage.h"
 #include "core/authcontroller.h"
 
 #include <memory>
 
 namespace Core {
-class Config;
-class TeamController;
-class TeamsModel;
+class Team;
+class Environment;
 }
 
 namespace Gui
@@ -20,17 +20,19 @@ class AddTeamPage : public QWidget
 {
     Q_OBJECT
 public:
-    explicit AddTeamPage(Core::Config &config, Core::TeamsModel &teams);
+    explicit AddTeamPage(Core::TeamsModel &teams, Core::Environment &environment);
 
 Q_SIGNALS:
-    void teamAdded(Core::TeamController *);
+    void teamAdded(Core::Team &);
 
 private Q_SLOTS:
     void authStateChanged(Core::AuthController::State state);
 
 private:
+    void setError(const QString &error);
+
     Ui::AddTeamPage ui;
-    Core::Config &mConfig;
+    Core::Environment &mEnv;
     Core::TeamsModel &mTeams;
     std::unique_ptr<Core::AuthController> mAuth;
 };

@@ -52,15 +52,15 @@ QIcon Team::icon() const
     }
 }
 
-std::unique_ptr<Team> Team::fromSettings(const QSettings &settings)
+std::unique_ptr<Team> Team::fromSettings(QSettings *settings)
 {
     std::unique_ptr<Team> team(new Team);
-    team->mId = settings.value(QStringLiteral("id")).toString();
-    team->mName = settings.value(QStringLiteral("name")).toString();
-    team->mDomain = settings.value(QStringLiteral("domain")).toString();
-    team->mIconUrl = settings.value(QStringLiteral("icon")).toUrl();
+    team->mId = settings->value(QStringLiteral("id")).toString();
+    team->mName = settings->value(QStringLiteral("name")).toString();
+    team->mDomain = settings->value(QStringLiteral("domain")).toString();
+    team->mIconUrl = settings->value(QStringLiteral("icon")).toUrl();
     // TODO: Store optionally in KWallet?
-    team->mAccessToken = settings.value(QStringLiteral("accessToken")).toString();
+    team->mAccessToken = settings->value(QStringLiteral("accessToken")).toString();
     return team;
 }
 
@@ -71,5 +71,14 @@ void Team::updateFromTeamInfo(const API::TeamInfoResponse &info)
     mDomain = info.domain;
     mIconUrl = info.icon.image_132;
     Q_EMIT teamChanged();
+}
+
+void Team::updateConfig(QSettings *settings)
+{
+    settings->setValue(QStringLiteral("id"), mId);
+    settings->setValue(QStringLiteral("name"), mName);
+    settings->setValue(QStringLiteral("domain"), mDomain);
+    settings->setValue(QStringLiteral("icon"), mIconUrl);
+    settings->setValue(QStringLiteral("accessToken"), mAccessToken);
 }
 

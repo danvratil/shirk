@@ -3,6 +3,8 @@
 #include "networkdispatcher.h"
 #include "shirk_config.h"
 #include "api.h"
+#include "environment.h"
+#include "core_debug.h"
 
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -12,6 +14,10 @@
 #include <QUuid>
 
 using namespace Core;
+
+AuthController::AuthController(Environment &environment)
+    : mEnv(environment)
+{}
 
 AuthController::~AuthController() = default;
 
@@ -45,8 +51,10 @@ void AuthController::setError(const QString &error)
 
 void AuthController::startServer()
 {
+    static constexpr const uint16_t port = 44916;
+
     mServer = std::make_unique<QTcpServer>();
-    if (mServer->listen()) {
+    if (mServer->listen(QHostAddress::Any, port)) {
         setError(tr("Failed to setup authentication flow."));
         return;
     }
@@ -65,7 +73,7 @@ void AuthController::launchBrowser()
     QUrlQuery query(url);
     query.addQueryItem(QStringLiteral("client_id"), clientId);
     query.addQueryItem(QStringLiteral("scope"), scopes.join(QLatin1Char(' ')));
-    query.addQueryItem(QStringLiteral("redirect_uri"), QStringLiteral("http://127.0.0.1:%1").arg(mServer->serverPort()));
+    query.addQueryItem(QStringLiteral("redirect_uri"), QStringLiteral("http://127.0.0.1:%1/").arg(mServer->serverPort()));
     query.addQueryItem(QStringLiteral("state"), mAuthState);
     url.setQuery(query);
 
@@ -118,7 +126,7 @@ void AuthController::readFromSocket(std::unique_ptr<QTcpSocket, DeleteLater> soc
                 const auto result = parseCode(data);
                 if (!result.has_value()) {
                     setError(tr("Failed to receive authentication code from Slack."));
-                } else if (result->state!= mAuthState) {
+                } else if (result->state != mAuthState) {
                     setError(tr("Security code mismatch."));
                 } else {
                     cb(result->code);
@@ -129,7 +137,8 @@ void AuthController::readFromSocket(std::unique_ptr<QTcpSocket, DeleteLater> soc
 void AuthController::exchangeCodeForToken(const QString &code, std::function<void(const API::OAuthAccessResponse&)> &&cb)
 {
     setState(State::RetrievingToken);
-    mDispatcher.sendRequest(API::OAuthAccessRequest{{}, clientId, clientSecret, code, QStringLiteral("http://127.0.0.1:").arg(mServer->serverPort())},
+    mEnv.networkDispatcher.sendRequest(API::OAuthAccessRequest{{}, clientId, clientSecret, code,
+            QStringLiteral("http://127.0.0.1:%1/").arg(mServer->serverPort())},
                             this, [cb = std::move(cb)](const auto &data) {
                                 cb(API::OAuthAccessResponse::parse(data));
                             });
@@ -138,7 +147,7 @@ void AuthController::exchangeCodeForToken(const QString &code, std::function<voi
 void AuthController::fetchTeamInfo()
 {
     setState(State::RetrievingTeamInfo);
-    mDispatcher.sendRequest(mTeam.get(),
+    mEnv.networkDispatcher.sendRequest(mTeam.get(),
                             API::TeamInfoRequest{{}, mTeam->id()},
                             this, [this](const auto &data) mutable {
                                 mTeam->updateFromTeamInfo(API::TeamInfoResponse::parse(data));
@@ -152,3 +161,25 @@ void AuthController::shutdownServer()
     mServer->close();
     mServer.reset();
 }
+
+QDebug operator<<(QDebug debug, AuthController::State state)
+{
+    auto dbg = debug.noquote();
+    switch (state) {
+    case AuthController::State::None:
+        return dbg << "AuthController::State::None";
+    case AuthController::State::Done:
+        return dbg << "AuthController::State::Done";
+    case AuthController::State::Error:
+        return dbg << "AuthController::State::Error";
+    case AuthController::State::RetrievingTeamInfo:
+        return dbg << "AuthController::State::RetrievingTeamInfo";
+    case AuthController::State::RetrievingToken:
+        return dbg << "AuthController::State::RetrievingToken";
+    case AuthController::State::WaitingForBrowser:
+        return dbg << "AuthController::State::WaitingForBrowser";
+    }
+
+    Q_UNREACHABLE();
+}
+
