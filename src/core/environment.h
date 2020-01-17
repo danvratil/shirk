@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Core
+namespace Shirk::Core
 {
 
 class Config;

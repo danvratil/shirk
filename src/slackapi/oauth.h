@@ -8,7 +8,7 @@
 class QUrlQuery;
 class QJsonValue;
 
-namespace Core::API {
+namespace Shirk::SlackAPI {
 
 class OAuthAccessRequest : public UnauthenticatedRequest
 {

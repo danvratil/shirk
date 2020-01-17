@@ -1,7 +1,8 @@
 #include "teampage.h"
 #include "core/environment.h"
 
-using namespace Gui;
+using namespace Shirk;
+using namespace Shirk::Gui;
 
 TeamPage::TeamPage(Core::TeamController &team, Core::Environment &environment)
     : QWidget()

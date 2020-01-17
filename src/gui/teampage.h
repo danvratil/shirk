@@ -2,13 +2,13 @@
 
 #include <QWidget>
 
-namespace Core
+namespace Shirk::Core
 {
 class Environment;
 class TeamController;
 }
 
-namespace Gui
+namespace Shirk::Gui
 {
 
 class TeamPage : public QWidget

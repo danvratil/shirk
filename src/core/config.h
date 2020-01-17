@@ -4,7 +4,7 @@
 
 #include <memory>
 
-namespace Core {
+namespace Shirk::Core {
 
 class Config
 {

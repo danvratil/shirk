@@ -2,7 +2,7 @@
 
 #include <QString>
 
-namespace Core
+namespace Shirk::Core
 {
 
 static const QString clientId = QStringLiteral("580306296802.703627838403");

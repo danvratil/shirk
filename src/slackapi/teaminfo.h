@@ -8,7 +8,7 @@
 class QJsonValue;
 class QUrlQuery;
 
-namespace Core::API {
+namespace Shirk::SlackAPI {
 
 class TeamInfoRequest : public AuthenticatedRequest
 {

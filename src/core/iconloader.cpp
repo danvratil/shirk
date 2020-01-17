@@ -2,7 +2,7 @@
 
 #include <QNetworkReply>
 
-using namespace Core;
+using namespace Shirk::Core;
 
 void IconLoader::load(const QUrl &url, std::function<void(const QIcon &)> &&callback)
 {

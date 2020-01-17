@@ -13,9 +13,9 @@ ecm_qt_declare_logging_category(shirk_gui_SRCS
 )
 
 add_library(shirk_gui STATIC ${shirk_gui_SRCS})
-target_include_directories(shirk_gui PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/shirk_gui_autogen/include>
+target_include_directories(shirk_gui
+    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/shirk_gui_autogen/include>
 )
 target_link_libraries(shirk_gui
     PUBLIC

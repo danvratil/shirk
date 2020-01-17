@@ -10,12 +10,12 @@
 class QJsonValue;
 class QSettings;
 
-namespace Core
-{
-
-namespace API {
+namespace Shirk::SlackAPI {
 class TeamInfoResponse;
 }
+
+namespace Shirk::Core
+{
 
 class Team : public QObject
 {
@@ -38,7 +38,7 @@ public:
     QIcon icon() const;
 
     static std::unique_ptr<Team> fromSettings(QSettings *settings);
-    void updateFromTeamInfo(const API::TeamInfoResponse &team);
+    void updateFromTeamInfo(const SlackAPI::TeamInfoResponse &team);
     void updateConfig(QSettings *settings);
 
 Q_SIGNALS:

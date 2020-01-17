@@ -1,7 +1,7 @@
 #include "config.h"
 #include <QSettings>
 
-using namespace Core;
+using namespace Shirk::Core;
 
 Config::Config() = default;
 

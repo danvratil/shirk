@@ -5,7 +5,8 @@
 #include "core/teamsmodel.h"
 #include "core/teamcontroller.h"
 
-using namespace Gui;
+using namespace Shirk;
+using namespace Shirk::Gui;
 
 AddTeamPage::AddTeamPage(Core::TeamsModel &teams, Core::Environment &environment)
     : QWidget()

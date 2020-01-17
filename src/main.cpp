@@ -10,6 +10,8 @@
 
 #include "shirk_version.h"
 
+using namespace Shirk;
+
 int main(int argc, char **argv)
 {
     QApplication app(argc, argv);

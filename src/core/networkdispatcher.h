@@ -11,10 +11,10 @@
 #include <functional>
 
 #include "team.h"
-#include "api/common.h"
+#include "slackapi/common.h"
 #include "utils/compat.h"
 
-namespace Core
+namespace Shirk::Core
 {
 
 class Config;
@@ -37,13 +37,13 @@ public:
 
 private:
     struct Request {
-        API::Method method;
+        SlackAPI::Method method;
         QUrl url;
         QPointer<QObject> obj;
         ResponseCallback func;
     };
 
-    void enqueueRequest(API::Method method, const QUrl &url, QObject *obj, ResponseCallback &&func);
+    void enqueueRequest(SlackAPI::Method method, const QUrl &url, QObject *obj, ResponseCallback &&func);
     QUrl urlForEndpoint(QStringView endpoint, const QUrlQuery &query, std::optional<QString> token = std::nullopt) const;
     void tryDispatchNextRequest();
     void dispatchRequest(Request &&request);

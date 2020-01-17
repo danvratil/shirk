@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Core::API {
+namespace Shirk::SlackAPI {
 
 class UnauthenticatedRequest {};
 class AuthenticatedRequest {};

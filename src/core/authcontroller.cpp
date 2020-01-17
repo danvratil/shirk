@@ -3,8 +3,8 @@
 #include "shirk_config.h"
 #include "environment.h"
 #include "core_debug.h"
-#include "api/oauth.h"
-#include "api/teaminfo.h"
+#include "slackapi/oauth.h"
+#include "slackapi/teaminfo.h"
 #include "utils/compat.h"
 
 #include <QTcpServer>
@@ -14,7 +14,7 @@
 #include <QUrlQuery>
 #include <QUuid>
 
-using namespace Core;
+using namespace Shirk::Core;
 
 AuthController::AuthController(Environment &environment)
     : mEnv(environment)
@@ -27,7 +27,7 @@ void AuthController::start()
     startServer();
     launchBrowser();
     waitForCode([this](const QString &code) mutable {
-        exchangeCodeForToken(code, [this](const API::OAuthAccessResponse &resp) mutable {
+        exchangeCodeForToken(code, [this](const SlackAPI::OAuthAccessResponse &resp) mutable {
             shutdownServer();
 
             mTeam = std::make_unique<Team>(resp.teamId, resp.teamName, resp.accessToken);
@@ -135,13 +135,13 @@ void AuthController::readFromSocket(std::unique_ptr<QTcpSocket, DeleteLater> soc
             });
 }
 
-void AuthController::exchangeCodeForToken(const QString &code, std::function<void(const API::OAuthAccessResponse&)> &&cb)
+void AuthController::exchangeCodeForToken(const QString &code, std::function<void(const SlackAPI::OAuthAccessResponse&)> &&cb)
 {
     setState(State::RetrievingToken);
-    mEnv.networkDispatcher.sendRequest(API::OAuthAccessRequest{{}, clientId, clientSecret, code,
+    mEnv.networkDispatcher.sendRequest(SlackAPI::OAuthAccessRequest{{}, clientId, clientSecret, code,
             QStringLiteral("http://127.0.0.1:%1/").arg(mServer->serverPort())},
                             this, [cb = std::move(cb)](const auto &data) {
-                                cb(API::OAuthAccessResponse::parse(data));
+                                cb(SlackAPI::OAuthAccessResponse::parse(data));
                             });
 }
 
@@ -149,9 +149,9 @@ void AuthController::fetchTeamInfo()
 {
     setState(State::RetrievingTeamInfo);
     mEnv.networkDispatcher.sendRequest(mTeam.get(),
-                            API::TeamInfoRequest{{}, mTeam->id()},
+                            SlackAPI::TeamInfoRequest{{}, mTeam->id()},
                             this, [this](const auto &data) mutable {
-                                mTeam->updateFromTeamInfo(API::TeamInfoResponse::parse(data));
+                                mTeam->updateFromTeamInfo(SlackAPI::TeamInfoResponse::parse(data));
                                 setState(State::Done);
                             });
 }

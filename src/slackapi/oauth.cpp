@@ -5,8 +5,8 @@
 #include <QJsonValue>
 #include <QUrlQuery>
 
-using namespace Core::API;
-using namespace Core::StringLiterals;
+using namespace Shirk::SlackAPI;
+using namespace Shirk::StringLiterals;
 
 QUrlQuery OAuthAccessRequest::serialize() const
 {

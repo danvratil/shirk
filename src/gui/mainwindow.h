@@ -6,12 +6,12 @@
 #include "core/teamsmodel.h"
 #include "ui_mainwindow.h"
 
-namespace Core {
+namespace Shirk::Core {
 class Environment;
 class TeamController;
 }
 
-namespace Gui {
+namespace Shirk::Gui {
 
 class MainWindow : public QMainWindow
 {

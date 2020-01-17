@@ -13,12 +13,13 @@
 class QTcpServer;
 class QTcpSocket;
 
-namespace Core {
-
-class Environment;
-namespace API {
+namespace Shirk::SlackAPI {
 class OAuthAccessResponse;
 }
+
+namespace Shirk::Core {
+
+class Environment;
 
 class AuthController : public QObject
 {
@@ -61,7 +62,7 @@ private:
     void shutdownServer();
     void launchBrowser();
     void waitForCode(std::function<void(const QString &)> &&cb);
-    void exchangeCodeForToken(const QString &code, std::function<void(const API::OAuthAccessResponse &)> &&cb);
+    void exchangeCodeForToken(const QString &code, std::function<void(const SlackAPI::OAuthAccessResponse &)> &&cb);
     void readFromSocket(std::unique_ptr<QTcpSocket, DeleteLater> socket, std::function<void(const QString &)> &&cb);
     void fetchTeamInfo();
 
@@ -77,4 +78,4 @@ private:
 
 }
 
-QDebug operator<<(QDebug, Core::AuthController::State);
+QDebug operator<<(QDebug, Shirk::Core::AuthController::State);

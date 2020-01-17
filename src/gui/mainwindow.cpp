@@ -9,7 +9,8 @@
 #include "addteampage.h"
 #include "teampage.h"
 
-using namespace Gui;
+using namespace Shirk;
+using namespace Shirk::Gui;
 
 MainWindow::MainWindow(Core::Environment &environment, Core::TeamsModel &teams)
     : QMainWindow()

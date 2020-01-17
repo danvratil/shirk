@@ -2,13 +2,12 @@
 
 #include <QObject>
 
-namespace Core
-{
-
-namespace API
-{
+namespace Shirk::SlackAPI {
 class Conversation;
 }
+
+namespace Shirk::Core
+{
 
 class Conversation : public QObject
 {
@@ -37,7 +36,7 @@ public:
     QString id() const { return mId; }
     QString name() const { return mName; }
 
-    void updateFromConversation(const API::Conversation &conv);
+    void updateFromConversation(const SlackAPI::Conversation &conv);
 
 protected:
     Conversation() = default;

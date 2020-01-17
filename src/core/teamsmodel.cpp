@@ -5,9 +5,9 @@
 #include "config.h"
 #include "core_debug.h"
 
-Q_DECLARE_METATYPE(Core::Team*)
+Q_DECLARE_METATYPE(Shirk::Core::Team*)
 
-using namespace Core;
+using namespace Shirk::Core;
 
 TeamsModel::~TeamsModel() = default;
 

@@ -3,7 +3,7 @@
 #include "environment.h"
 #include "team.h"
 
-using namespace Core;
+using namespace Shirk::Core;
 
 TeamController::TeamController(Environment &environment, std::unique_ptr<Team> team)
     : mEnv(environment)

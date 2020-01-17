@@ -4,12 +4,12 @@
 
 #include <QJsonArray>
 
-namespace Core::API
+namespace Shirk::SlackAPI
 {
 
 inline QString bool2str(bool val)
 {
-    using namespace Core::StringLiterals;
+    using namespace Shirk::StringLiterals;
 
     return val ? u"true"_qs : u"false"_qs;
 }

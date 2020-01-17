@@ -9,14 +9,14 @@
 
 #include <functional>
 
-using namespace Core;
+using namespace Shirk::Core;
 
 NetworkDispatcher::NetworkDispatcher(Config &config)
 {}
 
 NetworkDispatcher::~NetworkDispatcher() = default;
 
-void NetworkDispatcher::enqueueRequest(API::Method method, const QUrl &url, QObject *obj, ResponseCallback &&func)
+void NetworkDispatcher::enqueueRequest(SlackAPI::Method method, const QUrl &url, QObject *obj, ResponseCallback &&func)
 {
     mPendingRequests.push_back({method, url, obj, std::move(func)});
     tryDispatchNextRequest();

@@ -1,13 +1,13 @@
 #include "team.h"
 #include "iconloader.h"
 #include "config.h"
-#include "api/teaminfo.h"
+#include "slackapi/teaminfo.h"
 
 #include <QSettings>
 #include <QJsonObject>
 #include <QJsonValue>
 
-using namespace Core;
+using namespace Shirk::Core;
 
 Team::Team(const QString &id, const QString &name, const QString &accessToken)
     : mId(id)
@@ -64,7 +64,7 @@ std::unique_ptr<Team> Team::fromSettings(QSettings *settings)
     return team;
 }
 
-void Team::updateFromTeamInfo(const API::TeamInfoResponse &info)
+void Team::updateFromTeamInfo(const SlackAPI::TeamInfoResponse &info)
 {
     mId = info.id;
     mName = info.name;

@@ -8,7 +8,7 @@
 class QNetworkReply;
 
 
-namespace Core
+namespace Shirk::Core
 {
 
 class IconLoader

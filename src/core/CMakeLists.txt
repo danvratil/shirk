@@ -20,12 +20,12 @@ add_library(shirk_core STATIC ${shirk_core_SRCS})
 target_link_libraries(shirk_core
     PUBLIC
     shirk_utils
-    shirk_api
+    shirk_slackapi
     Qt5::Core
     Qt5::Gui
     Qt5::Network
 )
-target_include_directories(shirk_core PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-    $<BUILD_INTERFACE:${shirk_SOURCE_DIR}/src>
+target_include_directories(shirk_core
+    PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+    PRIVATE $<BUILD_INTERFACE:${shirk_SOURCE_DIR}/src>
 )

@@ -8,12 +8,12 @@
 
 #include <memory>
 
-namespace Core {
+namespace Shirk::Core {
 class Team;
 class Environment;
 }
 
-namespace Gui
+namespace Shirk::Gui
 {
 
 class AddTeamPage : public QWidget

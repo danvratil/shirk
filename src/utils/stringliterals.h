@@ -2,7 +2,7 @@
 
 #include <QLatin1String>
 
-namespace Core::StringLiterals {
+namespace Shirk::StringLiterals {
 
 constexpr QLatin1String operator"" _ql1(const char *str, std::size_t len) noexcept
 {

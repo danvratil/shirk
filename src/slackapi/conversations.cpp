@@ -6,8 +6,8 @@
 #include <QJsonValue>
 #include <QUrlQuery>
 
-using namespace Core::API;
-using namespace Core::StringLiterals;
+using namespace Shirk::SlackAPI;
+using namespace Shirk::StringLiterals;
 
 Conversation Conversation::parse(const QJsonValue &data)
 {
