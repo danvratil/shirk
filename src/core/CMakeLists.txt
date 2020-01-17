@@ -1,9 +1,6 @@
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
 configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/shirk_config.h)
 
 set(shirk_core_SRCS
-    api.cpp
     authcontroller.cpp
     config.cpp
     iconloader.cpp
@@ -22,7 +19,13 @@ ecm_qt_declare_logging_category(shirk_core_SRCS
 add_library(shirk_core STATIC ${shirk_core_SRCS})
 target_link_libraries(shirk_core
     PUBLIC
+    shirk_utils
+    shirk_api
     Qt5::Core
     Qt5::Gui
     Qt5::Network
+)
+target_include_directories(shirk_core PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+    $<BUILD_INTERFACE:${shirk_SOURCE_DIR}/src>
 )

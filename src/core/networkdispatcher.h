@@ -11,8 +11,8 @@
 #include <functional>
 
 #include "team.h"
-#include "api.h"
-#include "compat.h"
+#include "api/common.h"
+#include "utils/compat.h"
 
 namespace Core
 {
@@ -44,7 +44,7 @@ private:
     };
 
     void enqueueRequest(API::Method method, const QUrl &url, QObject *obj, ResponseCallback &&func);
-    QUrl urlForEndpoint(const QString &endpoint, const QUrlQuery &query, std::optional<QString> token = std::nullopt) const;
+    QUrl urlForEndpoint(QStringView endpoint, const QUrlQuery &query, std::optional<QString> token = std::nullopt) const;
     void tryDispatchNextRequest();
     void dispatchRequest(Request &&request);
 

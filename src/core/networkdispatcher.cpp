@@ -1,10 +1,11 @@
 #include "networkdispatcher.h"
+#include "core_debug.h"
 
 #include <QNetworkReply>
 #include <QJsonDocument>
 #include <QJsonValue>
 #include <QJsonObject>
-#include <QDebug>
+#include <QUrlQuery>
 
 #include <functional>
 
@@ -41,7 +42,7 @@ void NetworkDispatcher::dispatchRequest(Request &&data)
                 const auto json = QJsonDocument::fromJson(rawData);
                 if (!json[QStringLiteral("ok")].toBool()) {
                     // TODO: Error handling?!?!?
-                    qWarning() << "Error response:" << rawData;
+                    qCWarning(LOG_CORE) << "Error response:" << rawData;
                 } else {
                     request.func(json.object());
                 }
@@ -56,7 +57,7 @@ void NetworkDispatcher::dispatchRequest(Request &&data)
     mRunningRequests.push_back(std::move(reply));
 }
 
-QUrl NetworkDispatcher::urlForEndpoint(const QString &endpoint, const QUrlQuery &query, std::optional<QString> token) const
+QUrl NetworkDispatcher::urlForEndpoint(QStringView endpoint, const QUrlQuery &query, std::optional<QString> token) const
 {
     QUrl url(QStringLiteral("https://slack.com/api/%1").arg(endpoint));
     if (token.has_value()) {

@@ -3,6 +3,7 @@
 #include "team.h"
 #include "environment.h"
 #include "config.h"
+#include "core_debug.h"
 
 Q_DECLARE_METATYPE(Core::Team*)
 
@@ -12,11 +13,14 @@ TeamsModel::~TeamsModel() = default;
 
 void TeamsModel::loadControllers(Environment &env)
 {
+    beginResetModel();
     const auto teamIds = env.config.teamIds();
     for (const auto &teamId : teamIds) {
+        qCDebug(LOG_CORE) << "Loading team" << teamId;
         auto config = env.config.settingsForTeam(teamId);
         mControllers.push_back(std::make_unique<TeamController>(env, Team::fromSettings(config.get())));
     }
+    endResetModel();
 }
 
 QHash<int, QByteArray> TeamsModel::roleNames() const

@@ -1,7 +1,7 @@
 #include "team.h"
 #include "iconloader.h"
 #include "config.h"
-#include "api.h"
+#include "api/teaminfo.h"
 
 #include <QSettings>
 #include <QJsonObject>

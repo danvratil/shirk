@@ -1,10 +1,11 @@
 #include "authcontroller.h"
-#include "compat.h"
 #include "networkdispatcher.h"
 #include "shirk_config.h"
-#include "api.h"
 #include "environment.h"
 #include "core_debug.h"
+#include "api/oauth.h"
+#include "api/teaminfo.h"
+#include "utils/compat.h"
 
 #include <QTcpServer>
 #include <QTcpSocket>

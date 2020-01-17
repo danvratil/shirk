@@ -3,8 +3,8 @@
 #include "core/config.h"
 #include "core/environment.h"
 #include "core/teamsmodel.h"
-#include "core/compat.h"
 #include "core/teamcontroller.h"
+#include "utils/compat.h"
 
 #include "addteampage.h"
 #include "teampage.h"

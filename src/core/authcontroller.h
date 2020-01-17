@@ -7,7 +7,7 @@
 #include <optional>
 #include <memory>
 
-#include "compat.h"
+#include "utils/compat.h"
 #include "team.h"
 
 class QTcpServer;
