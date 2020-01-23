@@ -148,7 +148,7 @@ void AuthController::exchangeCodeForToken(const QString &code, std::function<voi
 void AuthController::fetchTeamInfo()
 {
     setState(State::RetrievingTeamInfo);
-    mEnv.networkDispatcher.sendRequest(mTeam.get(),
+    mEnv.networkDispatcher.sendRequest(*mTeam.get(),
                             SlackAPI::TeamInfoRequest{{}, mTeam->id()},
                             this, [this](const auto &data) mutable {
                                 mTeam->updateFromTeamInfo(SlackAPI::TeamInfoResponse::parse(data));

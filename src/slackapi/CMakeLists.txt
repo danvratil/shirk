@@ -2,6 +2,7 @@ set(shirk_slackapi_SRCS
     conversations.cpp
     oauth.cpp
     teaminfo.cpp
+    user.cpp
 )
 
 add_library(shirk_slackapi STATIC ${shirk_slackapi_SRCS})

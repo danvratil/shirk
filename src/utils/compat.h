@@ -1,8 +1,10 @@
 #pragma once
 
-#include <qglobal.h>
+#include <QString>
+#include <QHash>
 
 #include <memory>
+
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 13, 0)
     #define Q_DISABLE_MOVE(Class) \
@@ -14,6 +16,18 @@
         Q_DISABLE_MOVE(Class)
 #endif
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
+namespace std {
+template<>
+struct hash<QString> {
+    std::size_t operator()(const QString &str) const noexcept {
+        return qHash(str);
+    }
+};
+}
+#endif
+
+class QObject;
 struct DeleteLater {
     template<typename T>
     void operator()(T *obj) {

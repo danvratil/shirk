@@ -14,7 +14,9 @@ namespace Shirk::Core
 class IconLoader
 {
 public:
-    static void load(const QUrl &url, std::function<void(const QIcon &)> &&cb);
+    using Callback = std::function<void(const QIcon &)>;
+    static void load(const QUrl &url, Callback &&cb);
+    static void load(const QVector<QUrl> &urls, Callback &&cb);
 
 private:
     static std::optional<QIcon> loadFromCache(const QUrl &url);

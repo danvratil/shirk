@@ -8,6 +8,8 @@ set(shirk_core_SRCS
     team.cpp
     teamcontroller.cpp
     teamsmodel.cpp
+    user.cpp
+    usermanager.cpp
 )
 
 ecm_qt_declare_logging_category(shirk_core_SRCS

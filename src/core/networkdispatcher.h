@@ -33,7 +33,7 @@ public:
     void sendRequest(Msg &&msg, Obj *obj, Func &&func);
 
     template<typename Msg, typename Obj, typename Func>
-    void sendRequest(Team *team, Msg &&msg, Obj *obj, Func &&func);
+    void sendRequest(const Team &team, Msg &&msg, Obj *obj, Func &&func);
 
 private:
     struct Request {
@@ -59,14 +59,19 @@ private:
 template<typename Msg, typename Obj, typename Func>
 void NetworkDispatcher::sendRequest(Msg &&msg, Obj *obj, Func &&func)
 {
-    sendRequest(nullptr, std::move(msg), obj, std::move(func));
+    using MsgT = std::decay_t<Msg>;
+    const auto url = urlForEndpoint(MsgT::endpoint, msg.serialize());
+    enqueueRequest(MsgT::method, url, obj, [obj, func = std::move(func)](const QJsonValue &val) mutable {
+            if (obj) func(val);
+    });
 }
 
 template<typename Msg, typename Obj, typename Func>
-void NetworkDispatcher::sendRequest(Team *team, Msg &&msg, Obj *obj, Func &&func)
+void NetworkDispatcher::sendRequest(const Team &team, Msg &&msg, Obj *obj, Func &&func)
 {
-    const auto url = urlForEndpoint(Msg::endpoint, msg.serialize(), team ? std::optional<QString>(team->accessToken()) : std::nullopt);
-    enqueueRequest(Msg::method, url, obj, [obj, func = std::move(func)](const QJsonValue &val) mutable {
+    using MsgT = std::decay_t<Msg>;
+    const auto url = urlForEndpoint(MsgT::endpoint, msg.serialize(), team.accessToken());
+    enqueueRequest(MsgT::method, url, obj, [obj, func = std::move(func)](const QJsonValue &val) mutable {
             if (obj) func(val);
     });
 }
