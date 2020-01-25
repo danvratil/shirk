@@ -5,6 +5,7 @@
 #include <QNetworkRequest>
 #include <QPointer>
 #include <QJsonValue>
+#include <QUrlQuery>
 
 #include <memory>
 #include <vector>

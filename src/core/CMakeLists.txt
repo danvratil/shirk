@@ -3,8 +3,12 @@ configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/shirk_config.h)
 set(shirk_core_SRCS
     authcontroller.cpp
     config.cpp
+    conversation.cpp
+    conversationsmodel.cpp
     iconloader.cpp
     networkdispatcher.cpp
+    rtmcontroller.cpp
+    rtmsocket.cpp
     team.cpp
     teamcontroller.cpp
     teamsmodel.cpp
@@ -26,6 +30,8 @@ target_link_libraries(shirk_core
     Qt5::Core
     Qt5::Gui
     Qt5::Network
+    PRIVATE
+    Qt5::WebSockets
 )
 target_include_directories(shirk_core
     PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>

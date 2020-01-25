@@ -42,10 +42,10 @@ UserData UserData::fromAPI(const SlackAPI::UserInfo &info)
         .timeZone = info.tz,
         .timeZoneLabel = info.tz_label,
         .color = info.color,
+        .updated = info.updated,
         .isDeleted = info.deleted,
         .isAdmin = info.is_admin,
         .isOwner = info.is_owner,
-        .isBot = info.is_bot,
-        .updated = info.updated
+        .isBot = info.is_bot
     };
 }

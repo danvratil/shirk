@@ -1,5 +1,8 @@
 #pragma once
 
+#include "usermanager.h"
+#include "conversationsmodel.h"
+
 #include <QObject>
 
 #include <memory>
@@ -8,6 +11,7 @@ namespace Shirk::Core {
 
 class Team;
 class Environment;
+class ConversationsModel;
 
 class TeamController : public QObject
 {
@@ -18,6 +22,7 @@ class TeamController : public QObject
 public:
     enum class Status {
         Connecting,
+        Reconnecting,
         Connected,
         Disconnected
     };
@@ -38,6 +43,9 @@ public:
     const Team &team() const;
     Team &team();
 
+    UserManager &userManager() { return mUserManager; }
+    ConversationsModel &conversations() { return mConversations; }
+
     Status status() const;
 
     void updateConfig();
@@ -52,6 +60,9 @@ protected:
 private:
     Environment &mEnv;
     std::unique_ptr<Team> mTeam;
+
+    UserManager mUserManager;
+    ConversationsModel mConversations;
 
     Status mStatus = Status::Disconnected;
 };

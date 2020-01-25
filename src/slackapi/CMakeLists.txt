@@ -1,6 +1,9 @@
 set(shirk_slackapi_SRCS
     conversations.cpp
+    files.cpp
     oauth.cpp
+    events.cpp
+    rtm.cpp
     teaminfo.cpp
     user.cpp
 )
