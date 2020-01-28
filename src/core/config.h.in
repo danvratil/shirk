@@ -1,14 +1,16 @@
 #pragma once
 
 #include <QString>
+#include <QStringList>
 
 namespace Shirk::Core
 {
 
-static const QString clientId = QStringLiteral("580306296802.703627838403");
-static const QString clientSecret = QStringLiteral("962e864041c76730417b7b9f327f29b7");
+static const QString clientId = QStringLiteral("580306296802.925594408501");
+static const QString clientSecret = QStringLiteral("e7cbd40a1e68255d54b110774f8ea840");
 
 static const QStringList scopes = {
+    QStringLiteral("bot"),
     QStringLiteral("channels:history"),
     QStringLiteral("channels:read"),
     QStringLiteral("channels:write"),
