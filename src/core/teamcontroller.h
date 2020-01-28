@@ -12,6 +12,7 @@ namespace Shirk::Core {
 class Team;
 class Environment;
 class ConversationsModel;
+class RTMController;
 
 class TeamController : public QObject
 {
@@ -63,6 +64,7 @@ private:
 
     UserManager mUserManager;
     ConversationsModel mConversations;
+    std::unique_ptr<RTMController> mRTMController;
 
     Status mStatus = Status::Disconnected;
 };

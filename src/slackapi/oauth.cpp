@@ -22,6 +22,7 @@ OAuthAccessResponse OAuthAccessResponse::parse(const QJsonValue &data)
 {
     return {{},
             data["access_token"_ql1].toString(),
+            data["bot"_ql1]["bot_access_token"_ql1].toString(),
             data["scope"_ql1].toString(),
             data["team_name"_ql1].toString(),
             data["team_id"_ql1].toString()};

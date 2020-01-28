@@ -3,7 +3,8 @@
 namespace Shirk::SlackAPI {
 
 class UnauthenticatedRequest {};
-class AuthenticatedRequest {};
+class UserAuthenticatedRequest {};
+class BotAuthenticatedRequest {};
 class Response {};
 
 enum class Method {

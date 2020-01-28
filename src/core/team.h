@@ -26,15 +26,17 @@ class Team : public QObject
     Q_PROPERTY(QString domain READ domain NOTIFY teamChanged)
     Q_PROPERTY(QIcon icon READ icon NOTIFY teamChanged)
     Q_PROPERTY(QString accessToken READ accessToken NOTIFY teamChanged)
+    Q_PROPERTY(QString botAccessToken READ botAccessToken NOTIFY teamChanged);
 
 public:
-    Team(const QString &id, const QString &name, const QString &accessToken);
+    Team(const QString &id, const QString &name, const QString &accessToken, const QString &botAccessToken);
     ~Team() = default;
 
     QString id() const;
     QString name() const;
     QString domain() const;
     QString accessToken() const;
+    QString botAccessToken() const;
     QIcon icon() const;
 
     static std::unique_ptr<Team> fromSettings(QSettings *settings);
@@ -52,6 +54,7 @@ private:
     QString mName;
     QString mDomain;
     QString mAccessToken;
+    QString mBotAccessToken;
     QUrl mIconUrl;
     std::optional<QIcon> mIcon;
 };

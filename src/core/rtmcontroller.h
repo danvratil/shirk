@@ -5,12 +5,15 @@
 #include <memory>
 
 #include "rtmsocket.h"
+#include "slackapi/events.h"
 
 namespace Shirk::Core
 {
 
 class Team;
 class Environment;
+class RTMEventListener;
+
 class RTMController : public QObject
 {
     Q_OBJECT
@@ -30,6 +33,9 @@ public:
     };
     State state() const { return mState; }
 
+    void subscribeListener(RTMEventListener *listener, SlackAPI::RTM::EventType event);
+    void unsubscribeListener(RTMEventListener *listener, SlackAPI::RTM::EventType event);
+    void unsubscribeListener(RTMEventListener *listener);
 Q_SIGNALS:
     void stateChanged(State state);
     void error(const QString &error);
@@ -44,6 +50,8 @@ private:
     State mState = State::Disconnected;
 
     RTMSocketPtr mSocket;
+
+    std::array<std::vector<RTMEventListener *>, static_cast<std::size_t>(SlackAPI::RTM::EventType::_EventCount)> mSubscribers;
 };
 
 

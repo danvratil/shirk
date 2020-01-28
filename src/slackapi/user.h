@@ -11,7 +11,7 @@ class QJsonValue;
 namespace Shirk::SlackAPI
 {
 
-class UserInfoRequest : public AuthenticatedRequest
+class UserInfoRequest : public UserAuthenticatedRequest
 {
 public:
     static constexpr Method method = Method::GET;

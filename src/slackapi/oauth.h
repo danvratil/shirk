@@ -27,10 +27,11 @@ public:
 class OAuthAccessResponse : public Response
 {
 public:
-    QString accessToken;
+    QString access_token;
+    QString bot_access_token;
     QString scope;
-    QString teamName;
-    QString teamId;
+    QString team_name;
+    QString team_id;
 
     static OAuthAccessResponse parse(const QJsonValue &data);
 };

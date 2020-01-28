@@ -4,6 +4,7 @@
 #include "team.h"
 #include "conversationsmodel.h"
 #include "usermanager.h"
+#include "rtmcontroller.h"
 
 using namespace Shirk::Core;
 
@@ -43,7 +44,8 @@ void TeamController::start()
 {
     setStatus(Status::Connecting);
 
-    
+    mRTMController = std::make_unique<RTMController>(*mTeam.get(), mEnv);
+    mRTMController->start();
 }
 
 void TeamController::quit()

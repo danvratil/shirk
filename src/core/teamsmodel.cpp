@@ -19,6 +19,7 @@ void TeamsModel::loadControllers(Environment &env)
         qCDebug(LOG_CORE) << "Loading team" << teamId;
         auto config = env.config.settingsForTeam(teamId);
         mControllers.push_back(std::make_unique<TeamController>(env, Team::fromSettings(config.get())));
+        mControllers.back()->start();
     }
     endResetModel();
 }
@@ -78,6 +79,7 @@ void TeamsModel::addTeam(std::unique_ptr<TeamController> team)
 {
     beginInsertRows({}, mControllers.size(), mControllers.size());
     team->updateConfig();
+    team->start();
     mControllers.push_back(std::move(team));
     endInsertRows();
 }

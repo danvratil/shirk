@@ -10,7 +10,7 @@ class QUrlQuery;
 
 namespace Shirk::SlackAPI {
 
-class TeamInfoRequest : public AuthenticatedRequest
+class TeamInfoRequest : public UserAuthenticatedRequest
 {
 public:
     static constexpr const Method method = Method::GET;

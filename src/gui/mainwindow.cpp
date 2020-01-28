@@ -63,14 +63,14 @@ void MainWindow::openTeamPage(Core::TeamController &controller)
 void MainWindow::openAddTeamPage()
 {
     ui.addTeamAction->setEnabled(false);
-    auto page = make_unique_qobject<AddTeamPage>(mTeams, mEnv);
-    ui.stackedWidget->setCurrentIndex(ui.stackedWidget->addWidget(page.get()));
-    connect(page.get(), &AddTeamPage::teamAdded,
-            this, [this, page = std::move(page)](Core::Team &newTeam) mutable {
-                ui.stackedWidget->removeWidget(page.get());
+    auto page = new AddTeamPage(mTeams, mEnv);
+    ui.stackedWidget->setCurrentIndex(ui.stackedWidget->addWidget(page));
+    connect(page, &AddTeamPage::teamAdded,
+            this, [this, page](Core::Team &newTeam) mutable {
+                ui.stackedWidget->removeWidget(page);
                 openTeamPage(mTeams.controllerForTeam(newTeam));
                 ui.addTeamAction->setEnabled(true);
 
-                page.reset();
+                page->deleteLater();
             });
 }

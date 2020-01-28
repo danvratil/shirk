@@ -9,10 +9,11 @@
 
 using namespace Shirk::Core;
 
-Team::Team(const QString &id, const QString &name, const QString &accessToken)
+Team::Team(const QString &id, const QString &name, const QString &accessToken, const QString &botAccessToken)
     : mId(id)
     , mName(name)
     , mAccessToken(accessToken)
+    , mBotAccessToken(botAccessToken)
 {}
 
 QString Team::id() const
@@ -33,6 +34,11 @@ QString Team::domain() const
 QString Team::accessToken() const
 {
     return mAccessToken;
+}
+
+QString Team::botAccessToken() const
+{
+    return mBotAccessToken;
 }
 
 QIcon Team::icon() const
@@ -61,6 +67,7 @@ std::unique_ptr<Team> Team::fromSettings(QSettings *settings)
     team->mIconUrl = settings->value(QStringLiteral("icon")).toUrl();
     // TODO: Store optionally in KWallet?
     team->mAccessToken = settings->value(QStringLiteral("accessToken")).toString();
+    team->mBotAccessToken = settings->value(QStringLiteral("botAccessToken")).toString();
     return team;
 }
 
@@ -80,5 +87,6 @@ void Team::updateConfig(QSettings *settings)
     settings->setValue(QStringLiteral("domain"), mDomain);
     settings->setValue(QStringLiteral("icon"), mIconUrl);
     settings->setValue(QStringLiteral("accessToken"), mAccessToken);
+    settings->setValue(QStringLiteral("botAccessToken"), mBotAccessToken);
 }
 

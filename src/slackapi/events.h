@@ -12,123 +12,132 @@ class QJsonValue;
 namespace Shirk::SlackAPI::RTM
 {
 
+Q_NAMESPACE
+
 struct EventException : public std::runtime_error
 {
     explicit EventException(const QString &what)
         : std::runtime_error(what.toStdString()) {}
 };
 
-#define SHIRK_EVENT_COMMON(name) \
+#define SHIRK_EVENT_COMMON(type_, name) \
     public: \
         static constexpr QStringView eventName = u##name; \
+        static constexpr EventType type = EventType::type_; \
         static std::unique_ptr<Event> parse(const QJsonValue &);
 
-#define SHIRK_EVENT(klass, type, name) \
+#define SHIRK_EVENT(klass, type_, name) \
+    SHIRK_EVENT_COMMON(type_, name) \
     protected: \
-        explicit klass() : Event(Type::type) {} \
-    SHIRK_EVENT_COMMON(name)
+        explicit klass() : Event(&klass::type) {} \
 
-#define SHIRK_MESSAGE_EVENT(klass, type, name) \
+#define SHIRK_MESSAGE_EVENT(klass, type_, name) \
+    SHIRK_EVENT_COMMON(Message, name) \
     protected: \
-        explicit klass(): MessageEvent(SubType::type) {} \
-        friend struct MessageEvent; \
-    SHIRK_EVENT_COMMON(name) \
+        explicit klass(): MessageEvent(SubType::type_) {} \
+        friend struct MessageEvent;
 
 struct Event;
 std::unique_ptr<Event> parseEvent(const QJsonValue &event);
 
+enum class EventType {
+    Unknown,
+    AccountsChanged,
+    BotAdded,
+    BotChanged,
+    ChannelArchive,
+    ChannelCreated,
+    ChannelDeleted,
+    ChannelHistoryChanged,
+    ChannelJoined,
+    ChannelLeft,
+    ChannelMarked,
+    ChannelRename,
+    ChannelUnarchive,
+    CommandsChanged,
+    DnDUpdated,
+    DnDUpdatedUser,
+    EmailDomainChanged,
+    EmojiChanged,
+    ExternalOrgMigrationFinished,
+    ExternalOrgMigrationStarted,
+    FileChange,
+    FileCommentAdded,
+    FilecommentDeleted,
+    FileCommentEdited,
+    FileCreated,
+    FileDeleted,
+    FilePublic,
+    FileShared,
+    Goodbye,
+    GroupArchive,
+    GroupClose,
+    GroupDeleted,
+    GroupHistoryChanged,
+    GroupJoined,
+    GroupLeft,
+    GroupMarked,
+    GroupOpen,
+    GroupUnarchive,
+    Hello,
+    IMClose,
+    IMCreated,
+    IMHistoryChanged,
+    IMMarked,
+    IMOpen,
+    ManualPresenceChange,
+    MemberJoinedChannel,
+    Message,
+    PINAdded,
+    PINRemoved,
+    PrefChange,
+    PresenceChange,
+    PresenceQuery,
+    PresenceSub,
+    ReactionAdded,
+    ReactionRemoved,
+    ReconnectUrl,
+    StarAdded,
+    StarRemoved,
+    SubteamCreator,
+    SubteamMembersChanged,
+    SubteamSelfAdded,
+    SubteamSelfRemoved,
+    SubteamUpdated,
+    TeamDomainChange,
+    TeamJoin,
+    TeamMigrationStarted,
+    TeamPlanChange,
+    TeamPrefChange,
+    TeamProfileChange,
+    TeamProfileDelete,
+    TeamProfileReorder,
+    TeamRename,
+    UserChange,
+    UserTyping,
+
+    _EventCount
+};
+Q_ENUM_NS(EventType)
+
+
 struct Event
 {
-    enum Type {
-        Unknown,
-        AccountsChanged,
-        BotAdded,
-        BotChanged,
-        ChannelArchive,
-        ChannelCreated,
-        ChannelDeleted,
-        ChannelHistoryChanged,
-        ChannelJoined,
-        ChannelLeft,
-        ChannelMarked,
-        ChannelRename,
-        ChannelUnarchive,
-        CommandsChanged,
-        DnDUpdated,
-        DnDUpdatedUser,
-        EmailDomainChanged,
-        EmojiChanged,
-        ExternalOrgMigrationFinished,
-        ExternalOrgMigrationStarted,
-        FileChange,
-        FileCommentAdded,
-        FilecommentDeleted,
-        FileCommentEdited,
-        FileCreated,
-        FileDeleted,
-        FilePublic,
-        FileShared,
-        Goodbye,
-        GroupArchive,
-        GroupClose,
-        GroupDeleted,
-        GroupHistoryChanged,
-        GroupJoined,
-        GroupLeft,
-        GroupMarked,
-        GroupOpen,
-        GroupUnarchive,
-        Hello,
-        IMClose,
-        IMCreated,
-        IMHistoryChanged,
-        IMMarked,
-        IMOpen,
-        ManualPresenceChange,
-        MemberJoinedChannel,
-        Message,
-        PINAdded,
-        PINRemoved,
-        PrefChange,
-        PresenceChange,
-        PresenceQuery,
-        PresenceSub,
-        ReactionAdded,
-        ReactionRemoved,
-        ReconnectUrl,
-        StarAdded,
-        StarRemoved,
-        SubteamCreator,
-        SubteamMembersChanged,
-        SubteamSelfAdded,
-        SubteamSelfRemoved,
-        SubteamUpdated,
-        TeamDomainChange,
-        TeamJoin,
-        TeamMigrationStarted,
-        TeamPlanChange,
-        TeamPrefChange,
-        TeamProfileChange,
-        TeamProfileDelete,
-        TeamProfileReorder,
-        TeamRename,
-        UserChange,
-        UserTyping
-    };
-
     Event() = delete;
     Event(const Event &) = delete;
     Event(Event &&) = delete;
     Event &operator=(const Event &) = delete;
     Event &operator=(Event &&) = delete;
 
-    Type type = Type::Unknown;
+    EventType eventType() const { return *type_ptr; }
 
 protected:
-    explicit Event(Type type)
-        : type(type)
+    explicit constexpr Event(const EventType *type)
+        : type_ptr(type)
     {}
 
+private:
+    const EventType *type_ptr = nullptr;
 };
 
 struct MessageEvent : public Event
@@ -170,7 +179,7 @@ struct MessageEvent : public Event
     QString text;
     double ts = .0f;
     bool hidden = false;
-    SubType subType = SubType::Message;
+    const SubType subType = SubType::Message;
 
 protected:
     template<typename EventType>
@@ -184,7 +193,7 @@ protected:
     static void parseBase(MessageEvent *event, const QJsonValue &);
 
     explicit MessageEvent(SubType subtype)
-        : Event(Event::Type::Message)
+        : Event(&MessageEvent::type)
         , subType(subtype)
     {}
 };
@@ -337,3 +346,5 @@ struct MemberJoinedChannelEvent: public Event
 };
 
 } // namespace
+
+QDebug operator<<(QDebug, Shirk::SlackAPI::RTM::EventType type);

@@ -8,6 +8,7 @@ set(shirk_core_SRCS
     iconloader.cpp
     networkdispatcher.cpp
     rtmcontroller.cpp
+    rtmeventlistener.cpp
     rtmsocket.cpp
     team.cpp
     teamcontroller.cpp

@@ -30,7 +30,7 @@ void AuthController::start()
         exchangeCodeForToken(code, [this](const SlackAPI::OAuthAccessResponse &resp) mutable {
             shutdownServer();
 
-            mTeam = std::make_unique<Team>(resp.teamId, resp.teamName, resp.accessToken);
+            mTeam = std::make_unique<Team>(resp.team_id, resp.team_name, resp.access_token, resp.bot_access_token);
             fetchTeamInfo();
         });
     });
@@ -55,7 +55,7 @@ void AuthController::startServer()
     static constexpr const uint16_t port = 44916;
 
     mServer = std::make_unique<QTcpServer>();
-    if (mServer->listen(QHostAddress::Any, port)) {
+    if (!mServer->listen(QHostAddress::Any, port)) {
         setError(tr("Failed to setup authentication flow."));
         return;
     }
@@ -117,7 +117,8 @@ std::optional<Result> parseCode(const QByteArray &data)
 
 void AuthController::readFromSocket(std::unique_ptr<QTcpSocket, DeleteLater> socket, std::function<void(const QString &)> &&cb)
 {
-    connect(socket.get(), &QTcpSocket::readyRead,
+    const auto s = socket.get();
+    connect(s, &QTcpSocket::readyRead,
             this, [this, socket = std::move(socket), cb = std::move(cb)]() mutable {
                 const auto data = socket->readLine();
                 socket->write("HTTP/1.1 200 OK\n");
@@ -141,6 +142,7 @@ void AuthController::exchangeCodeForToken(const QString &code, std::function<voi
     mEnv.networkDispatcher.sendRequest(SlackAPI::OAuthAccessRequest{{}, clientId, clientSecret, code,
             QStringLiteral("http://127.0.0.1:%1/").arg(mServer->serverPort())},
                             this, [cb = std::move(cb)](const auto &data) {
+                                qCDebug(LOG_CORE) << data;
                                 cb(SlackAPI::OAuthAccessResponse::parse(data));
                             });
 }

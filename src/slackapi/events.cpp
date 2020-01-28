@@ -5,6 +5,10 @@
 #include <QJsonValue>
 #include <QJsonObject>
 #include <QStringView>
+#include <QMetaObject>
+#include <QMetaEnum>
+#include <QDebug>
+
 #include <type_traits>
 
 using namespace Shirk::SlackAPI::RTM;
@@ -15,7 +19,9 @@ namespace {
 struct Entry {
     using ParseFunc = std::unique_ptr<Event>(*)(const QJsonValue &);
 
-    constexpr bool operator==(const Entry &);
+    constexpr Entry(QStringView name, ParseFunc func)
+        : name(name), parseFunc(func)
+    {}
 
     const QStringView name;
     const ParseFunc parseFunc;
@@ -63,6 +69,15 @@ auto findInRegistry(const Registry &registry, QStringView type)
 }
 
 } // namespace
+
+QDebug operator<<(QDebug debug, EventType type)
+{
+    constexpr auto &mo = Shirk::SlackAPI::RTM::staticMetaObject;
+    const auto idx = mo.indexOfEnumerator("Type");
+    Q_ASSERT(idx > -1);
+    const auto enumerator = mo.enumerator(idx);
+    return debug.noquote() << enumerator.valueToKey(static_cast<int>(type));
+}
 
 
 std::unique_ptr<Event> Shirk::SlackAPI::RTM::parseEvent(const QJsonValue &value)

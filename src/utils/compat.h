@@ -41,3 +41,6 @@ auto make_unique_qobject(Args && ... args)
 {
     return std::unique_ptr<T, DeleteLater>(new T(std::forward<Args>(args) ...));
 }
+
+template<typename T>
+using UniqueQObjectPtr = std::unique_ptr<T, DeleteLater>;

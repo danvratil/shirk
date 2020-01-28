@@ -1,8 +1,8 @@
 #include "rtmcontroller.h"
+#include "rtmeventlistener.h"
 #include "environment.h"
 #include "networkdispatcher.h"
 #include "slackapi/rtm.h"
-#include "slackapi/events.h"
 #include "utils/stringliterals.h"
 
 #include <QLoggingCategory>
@@ -33,6 +33,35 @@ RTMController::RTMController(const Team &team, Environment &env)
 {}
 
 RTMController::~RTMController() = default;
+
+void RTMController::subscribeListener(RTMEventListener *listener, SlackAPI::RTM::EventType type)
+{
+    auto &listeners = mSubscribers[static_cast<std::size_t>(type)];
+    if (std::find(listeners.cbegin(), listeners.cend(), listener) == listeners.cend()) {
+        listeners.push_back(listener);
+    } else {
+        qCWarning(LOG_RTM) << "Listener" << listener << "already subscribed to event" << type;
+    }
+}
+
+void RTMController::unsubscribeListener(RTMEventListener *listener, SlackAPI::RTM::EventType type)
+{
+    auto &listeners = mSubscribers[static_cast<std::size_t>(type)];
+    if (const auto s = std::find(listeners.begin(), listeners.end(), listener); s != listeners.end()) {
+        listeners.erase(s);
+    } else {
+        qCWarning(LOG_RTM) << "Listener" << listener << "is not subscribed to event" << type;
+    }
+}
+
+void RTMController::unsubscribeListener(RTMEventListener *listener)
+{
+    for (auto &listeners : mSubscribers) {
+        if (const auto s = std::find(listeners.begin(), listeners.end(), listener); s != listeners.end()) {
+            listeners.erase(s);
+        }
+    }
+}
 
 void RTMController::setState(State state)
 {
@@ -84,5 +113,8 @@ void RTMController::eventsAvailable()
         return;
     }
 
-    // TODO: MATCH
+    const auto &listeners = mSubscribers[static_cast<std::size_t>(event->eventType())];
+    for (auto *listener : listeners) {
+        listener->rtmEvent(event.get());
+    }
 }

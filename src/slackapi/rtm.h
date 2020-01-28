@@ -11,7 +11,7 @@ class QJsonValue;
 namespace Shirk::SlackAPI
 {
 
-struct RTMConnectRequest : public AuthenticatedRequest
+struct RTMConnectRequest : public BotAuthenticatedRequest
 {
     static constexpr QStringView endpoint = u"rtm.connect";
     static constexpr Method method = Method::GET;
