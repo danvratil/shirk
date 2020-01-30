@@ -12,6 +12,7 @@
 #include <functional>
 
 #include "team.h"
+#include "future.h"
 #include "slackapi/common.h"
 #include "utils/compat.h"
 
@@ -25,26 +26,23 @@ class NetworkDispatcher : public QObject
     Q_OBJECT
 
 public:
-    using ResponseCallback = std::function<void(const QJsonValue &)>;
-
     NetworkDispatcher(Config &config);
     ~NetworkDispatcher() override;
 
-    template<typename Msg, typename Obj, typename Func>
-    void sendRequest(Msg &&msg, Obj *obj, Func &&func);
+    template<typename Msg>
+    Future sendRequest(Msg &&msg);
 
-    template<typename Msg, typename Obj, typename Func>
-    void sendRequest(const Team &team, Msg &&msg, Obj *obj, Func &&func);
+    template<typename Msg>
+    Future sendRequest(const Team &team, Msg &&msg);
 
 private:
     struct Request {
         SlackAPI::Method method;
         QUrl url;
-        QPointer<QObject> obj;
-        ResponseCallback func;
+        Promise<QJsonObject> promise;
     };
 
-    void enqueueRequest(SlackAPI::Method method, const QUrl &url, QObject *obj, ResponseCallback &&func);
+    Future<QJsonObject> enqueueRequest(SlackAPI::Method method, const QUrl &url);
     QUrl urlForEndpoint(QStringView endpoint, const QUrlQuery &query, std::optional<QString> token = std::nullopt) const;
     void tryDispatchNextRequest();
     void dispatchRequest(Request &&request);
@@ -60,24 +58,18 @@ private:
 };
 
 
-template<typename Msg, typename Obj, typename Func>
-void NetworkDispatcher::sendRequest(Msg &&msg, Obj *obj, Func &&func)
+template<typename Msg>
+Future<QJsonObject> NetworkDispatcher::sendRequest(Msg &&msg)
 {
     using MsgT = std::decay_t<Msg>;
-    const auto url = urlForEndpoint(MsgT::endpoint, msg.serialize());
-    enqueueRequest(MsgT::method, url, obj, [obj, func = std::move(func)](const QJsonValue &val) mutable {
-            if (obj) func(val);
-    });
+    return enqueueRequest(MsgT::method, urlForEndpoint(MsgT::endpoint, msg.serialize()));
 }
 
-template<typename Msg, typename Obj, typename Func>
-void NetworkDispatcher::sendRequest(const Team &team, Msg &&msg, Obj *obj, Func &&func)
+template<typename Msg>
+Future<QJsonObject> NetworkDispatcher::sendRequest(const Team &team, Msg &&msg)
 {
     using MsgT = std::decay_t<Msg>;
-    const auto url = urlForEndpoint(MsgT::endpoint, msg.serialize(), getTokenForMsg<Msg>(team));
-    enqueueRequest(MsgT::method, url, obj, [obj, func = std::move(func)](const QJsonValue &val) mutable {
-            if (obj) func(val);
-    });
+    enqueueRequest(MsgT::method, urlForEndpoint(MsgT::endpoint, msg.serialize(), getTokenForMsg<Msg>(team)));
 }
 
 template<typename Msg>

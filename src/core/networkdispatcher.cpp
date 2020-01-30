@@ -1,5 +1,6 @@
 #include "networkdispatcher.h"
 #include "core_debug.h"
+#include "utils/stringliterals.h"
 
 #include <QNetworkReply>
 #include <QJsonDocument>
@@ -10,16 +11,18 @@
 #include <functional>
 
 using namespace Shirk::Core;
+using namespace Shirk::StringLiterals;
 
 NetworkDispatcher::NetworkDispatcher(Config &config)
 {}
 
 NetworkDispatcher::~NetworkDispatcher() = default;
 
-void NetworkDispatcher::enqueueRequest(SlackAPI::Method method, const QUrl &url, QObject *obj, ResponseCallback &&func)
+Future NetworkDispatcher::enqueueRequest(SlackAPI::Method method, const QUrl &url)
 {
-    mPendingRequests.push_back({method, url, obj, std::move(func)});
+    mPendingRequests.push_back({method, url, Promise{}});
     tryDispatchNextRequest();
+    return mPendingRequests.back().promise.getFuture();
 }
 
 
@@ -37,14 +40,13 @@ void NetworkDispatcher::dispatchRequest(Request &&data)
     QNetworkRequest request(data.url);
     std::unique_ptr<QNetworkReply, DeleteLater> reply(mNam.get(request));
     connect(reply.get(), &QNetworkReply::finished,
-            this, [this, reply = reply.get(), request = std::move(data)]() {
+            this, [this, reply = reply.get(), request = std::move(data)]() mutable {
                 const auto rawData = reply->readAll();
                 const auto json = QJsonDocument::fromJson(rawData);
                 if (!json[QStringLiteral("ok")].toBool()) {
-                    // TODO: Error handling?!?!?
-                    qCWarning(LOG_CORE) << "Error response:" << rawData;
-                } else {
-                    request.func(json.object());
+                    request.promise.setError(u"Error response: %1"_qs.arg(QString::fromUtf8(rawData)));
+                } else{
+                    request.promise.setResult(json.object()); 
                 }
 
                 auto it = std::find_if(mRunningRequests.begin(), mRunningRequests.end(),

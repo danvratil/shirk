@@ -40,16 +40,35 @@ private Q_SLOTS:
     {
         Promise promise;
         bool continuationCalled = false;
+        Future baseFuture = promise.getFuture();
+        Future thenFuture = baseFuture.then([&continuationCalled]() mutable {
+                continuationCalled = true;
+        });
+        QVERIFY(!baseFuture.isFinished());
+        QVERIFY(!thenFuture.isFinished());
+        QVERIFY(!continuationCalled);
+
+        promise.setResult();
+
+        QVERIFY(baseFuture.isFinished());
+        QVERIFY(thenFuture.isFinished());
+        QVERIFY(continuationCalled);
+    }
+
+    void testContinuationTemp()
+    {
+        Promise promise;
+        bool continuationCalled = false;
         Future future = promise.getFuture().then([&continuationCalled]() mutable {
-            continuationCalled = true;
+                continuationCalled = true;
         });
         QVERIFY(!future.isFinished());
         QVERIFY(!continuationCalled);
 
         promise.setResult();
 
-        QVERIFY(future.isFinished());
         QVERIFY(continuationCalled);
+        QVERIFY(future.isFinished());
     }
 
     void testFutureWatcher()

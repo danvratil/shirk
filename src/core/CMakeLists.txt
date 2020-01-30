@@ -32,10 +32,12 @@ target_link_libraries(shirk_core
     Qt5::Core
     Qt5::Gui
     Qt5::Network
+    CONAN_PKG::tl-expected
     PRIVATE
     Qt5::WebSockets
 )
 target_include_directories(shirk_core
     PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-    PUBLIC $<BUILD_INTERFACE:${shirk_SOURCE_DIR}/src>
+    PUBLIC
+    $<BUILD_INTERFACE:${shirk_SOURCE_DIR}/src>
 )
