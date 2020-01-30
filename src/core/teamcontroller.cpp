@@ -5,8 +5,21 @@
 #include "conversationsmodel.h"
 #include "usermanager.h"
 #include "rtmcontroller.h"
+#include "core_debug.h"
+
+#include <QMetaEnum>
+#include <QMetaObject>
 
 using namespace Shirk::Core;
+
+QDebug operator<<(QDebug dbg, TeamController::Status status)
+{
+    const auto idx = TeamController::staticMetaObject.indexOfEnumerator("Status");
+    Q_ASSERT(idx > -1);
+    const auto enumerator = TeamController::staticMetaObject.enumerator(idx);
+    return dbg.noquote() << enumerator.valueToKey(static_cast<int>(status));
+}
+
 
 TeamController::TeamController(Environment &environment, std::unique_ptr<Team> team)
     : mEnv(environment)
@@ -35,6 +48,7 @@ TeamController::Status TeamController::status() const
 void TeamController::setStatus(Status status)
 {
     if (mStatus != status) {
+        qCDebug(LOG_CORE) << "State changed to" << status;
         mStatus = status;
         Q_EMIT statusChanged(status);
     }
@@ -46,6 +60,8 @@ void TeamController::start()
 
     mRTMController = std::make_unique<RTMController>(*mTeam.get(), mEnv);
     mRTMController->start();
+
+
 }
 
 void TeamController::quit()

@@ -5,6 +5,7 @@ set(shirk_core_SRCS
     config.cpp
     conversation.cpp
     conversationsmodel.cpp
+    future.cpp
     iconloader.cpp
     networkdispatcher.cpp
     rtmcontroller.cpp
@@ -36,5 +37,5 @@ target_link_libraries(shirk_core
 )
 target_include_directories(shirk_core
     PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-    PRIVATE $<BUILD_INTERFACE:${shirk_SOURCE_DIR}/src>
+    PUBLIC $<BUILD_INTERFACE:${shirk_SOURCE_DIR}/src>
 )

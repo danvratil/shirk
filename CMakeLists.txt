@@ -39,6 +39,7 @@ find_package(KF5Notifications ${KF5_REQUIRED_VERSION} REQUIRED)
 
 
 if (BUILD_TESTING)
+    enable_testing()
     add_subdirectory(autotests)
 endif ()
 
