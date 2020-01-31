@@ -18,9 +18,9 @@ NetworkDispatcher::NetworkDispatcher(Config &config)
 
 NetworkDispatcher::~NetworkDispatcher() = default;
 
-Future NetworkDispatcher::enqueueRequest(SlackAPI::Method method, const QUrl &url)
+Future<QJsonObject> NetworkDispatcher::enqueueRequest(SlackAPI::Method method, const QUrl &url)
 {
-    mPendingRequests.push_back({method, url, Promise{}});
+    mPendingRequests.emplace_back(Request{method, url, Promise<QJsonObject>{}});
     tryDispatchNextRequest();
     return mPendingRequests.back().promise.getFuture();
 }
@@ -32,7 +32,8 @@ void NetworkDispatcher::tryDispatchNextRequest()
         return;
     }
 
-    dispatchRequest(mPendingRequests.takeFirst());
+    dispatchRequest(std::move(mPendingRequests.front()));
+    mPendingRequests.pop_front();
 }
 
 void NetworkDispatcher::dispatchRequest(Request &&data)
@@ -46,7 +47,7 @@ void NetworkDispatcher::dispatchRequest(Request &&data)
                 if (!json[QStringLiteral("ok")].toBool()) {
                     request.promise.setError(u"Error response: %1"_qs.arg(QString::fromUtf8(rawData)));
                 } else{
-                    request.promise.setResult(json.object()); 
+                    request.promise.setResult(json.object());
                 }
 
                 auto it = std::find_if(mRunningRequests.begin(), mRunningRequests.end(),

@@ -3,9 +3,9 @@
 #include <QString>
 #include <QStringList>
 
-#include <variant>
 #include <memory>
 #include <functional>
+#include <type_traits>
 
 namespace Shirk::Core
 {
@@ -25,19 +25,32 @@ struct SharedStateBase : std::enable_shared_from_this<SharedStateBase>
 {
     using ErrorType = QString;
 
+    SharedStateBase() = default;
+    SharedStateBase(const SharedStateBase &) = delete;
+    SharedStateBase(SharedStateBase &&) noexcept = delete;
+    SharedStateBase &operator=(const SharedStateBase &) = delete;
+    SharedStateBase &operator=(SharedStateBase &&) noexcept = delete;
+
     void addObserver(SharedStateObserver *observer);
-    void removeFuture(SharedStateObserver *observer);
+    void removeObserver(SharedStateObserver *observer);
 
     std::vector<SharedStateObserver *> observers;
+    std::optional<ErrorType> error;
+    bool hasResult = false;
 };
 
 template<typename T>
 struct SharedState : public SharedStateBase
 {
     using ResultType = T;
-    using ResultValueType = std::conditional_t<std::is_void_v<T>, VoidType, ResultType>;
 
-    std::variant<std::monostate, ResultValueType, ErrorType> result;
+    std::aligned_storage_t<sizeof(ResultType), alignof(ResultType)> result{};
+};
+
+template<>
+struct SharedState<void> : public SharedStateBase
+{
+    using ResultType = void;
 };
 
 class SharedStateObserver {
@@ -51,7 +64,6 @@ protected:
 template<typename T>
 class Future : public detail::SharedStateObserver
 {
-    using ResultValueType = typename detail::SharedState<T>::ResultValueType;
 public:
     using ErrorType = typename detail::SharedState<T>::ErrorType;
     using ResultType = typename detail::SharedState<T>::ResultType;
@@ -66,32 +78,29 @@ public:
 
     std::optional<QString> error() const
     {
-        if (std::holds_alternative<ErrorType>(mState->result)) {
-            return std::get<ErrorType>(mState->result);
-        }
-        return std::nullopt;
+        return mState->error;
     }
 
     bool isFinished() const
     {
-        return std::holds_alternative<ErrorType>(mState->result)
-                || std::holds_alternative<ResultValueType>(mState->result);
+        return mState->error.has_value() || mState->hasResult;
     }
 
     template<typename U = ResultType, typename = std::enable_if_t<!std::is_void_v<U>>>
     U result() const
     {
-        return std::get<ResultValueType>(mState->result);
+        return *reinterpret_cast<U *>(&mState->result);
     }
 
     template<typename U = ResultType, typename = std::enable_if_t<!std::is_void_v<U>>>
     U &&result()
     {
-        return std::move(std::get<ResultValueType>(mState->result));
+        return std::move(*reinterpret_cast<U *>(&mState->result));
     }
 
 private:
     template<typename U> friend class Promise;
+    friend class FutureWatcher;
 
     Future(std::shared_ptr<detail::SharedState<T>> state)
         : mState(state)
@@ -127,8 +136,8 @@ public:
     void setError(const ErrorType &error)
     {
         Q_ASSERT(mState);
-        Q_ASSERT(std::holds_alternative<std::monostate>(mState->result));
-        mState->result = error;
+        Q_ASSERT(!mState->hasResult && !mState->error.has_value());
+        mState->error = error;
         notify();
     }
 
@@ -136,8 +145,9 @@ public:
     void setResult(const U &result)
     {
         Q_ASSERT(mState);
-        Q_ASSERT(std::holds_alternative<std::monostate>(mState->result));
-        mState->result = result;
+        Q_ASSERT(!mState->hasResult && !mState->error.has_value());
+        new (reinterpret_cast<U *>(&mState->result)) U(result);
+        mState->hasResult = true;
         notify();
     }
 
@@ -145,8 +155,9 @@ public:
     void setResult(U &&result)
     {
         Q_ASSERT(mState);
-        Q_ASSERT(std::holds_alternative<std::monostate>(mState->result));
-        mState->result = std::move(result);
+        Q_ASSERT(!mState->hasResult && !mState->error.has_value());
+        new (reinterpret_cast<U *>(&mState->result)) U(std::move(result));
+        mState->hasResult = true;
         notify();
     }
 
@@ -154,8 +165,8 @@ public:
     void setResult()
     {
         Q_ASSERT(mState);
-        Q_ASSERT(std::holds_alternative<std::monostate>(mState->result));
-        mState->result = typename detail::SharedState<U>::ResultValueType{};
+        Q_ASSERT(!mState->hasResult && !mState->error.has_value());
+        mState->hasResult = true;
         notify();
     }
 
@@ -163,9 +174,8 @@ private:
     void notify()
     {
         auto observers = mState->observers;
-        std::for_each(observers.begin(), observers.end(), [this](detail::SharedStateObserver *o) {
-            o->notify(this);
-        });
+        std::for_each(observers.begin(), observers.end(),
+                      std::bind(&detail::SharedStateObserver::notify, std::placeholders::_1, mState.get()));
         mState.reset();
     }
 
@@ -181,40 +191,43 @@ public:
     using Callback = std::function<void()>;
 
     explicit FutureWatcher() = default;
-    FutureWatcher(Callback &&cb);
+    explicit FutureWatcher(Callback &&cb);
     template<typename U>
     FutureWatcher(Future<U> &&future)
     {
-        mStates.push_back(std::move(future.mState));
-        mStates.back()->addObserver(this);
+        addSharedState(std::move(future.mState));
     }
+
     template<typename U>
     FutureWatcher(Future<U> &&future, Callback &&cb)
         : mCallback(std::move(cb))
     {
-        mStates.push_back(std::move(future.mState));
-        mStates.back()->addObserver(this);
+        addSharedState(std::move(future.mState));
     }
 
     FutureWatcher(FutureWatcher &&) = default;
     FutureWatcher &operator=(FutureWatcher &&) = default;
     FutureWatcher(const FutureWatcher &) = delete;
     FutureWatcher &operator=(const FutureWatcher &) = delete;
-    ~FutureWatcher() = default;
+    ~FutureWatcher();
 
     template<typename U>
-    void operator()(Future<U> &&future);
+    void operator()(Future<U> &&future)
+    {
+        addSharedState(std::move(future.mState));
+    }
 
     template<typename F, typename ... Futures>
     void operator()(F &&f, Futures && ... futures)
     {
-        (*this)(std::forward<F>(f));
+        addSharedState(std::move(f.mState));
         (*this)(std::forward<Futures>(futures) ...);
     }
 
     bool isFinished() const;
 
 private:
+    void addSharedState(std::shared_ptr<detail::SharedStateBase> state);
     void notify(detail::SharedStateBase *state) override;
 
     std::vector<std::shared_ptr<detail::SharedStateBase>> mStates;
@@ -223,4 +236,4 @@ private:
     int mFinished = 0;
 };
 
-}
+} // namespace

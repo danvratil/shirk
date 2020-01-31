@@ -6,9 +6,11 @@
 #include <QPointer>
 #include <QJsonValue>
 #include <QUrlQuery>
+#include <QJsonObject>
 
 #include <memory>
 #include <vector>
+#include <deque>
 #include <functional>
 
 #include "team.h"
@@ -30,10 +32,10 @@ public:
     ~NetworkDispatcher() override;
 
     template<typename Msg>
-    Future sendRequest(Msg &&msg);
+    Future<QJsonObject> sendRequest(Msg &&msg);
 
     template<typename Msg>
-    Future sendRequest(const Team &team, Msg &&msg);
+    Future<QJsonObject> sendRequest(const Team &team, Msg &&msg);
 
 private:
     struct Request {
@@ -53,7 +55,7 @@ private:
     int mMaxRunningRequests = 5;
     QNetworkAccessManager mNam;
 
-    QVector<Request> mPendingRequests;
+    std::deque<Request> mPendingRequests;
     std::vector<std::unique_ptr<QNetworkReply, DeleteLater>> mRunningRequests;
 };
 
@@ -69,7 +71,7 @@ template<typename Msg>
 Future<QJsonObject> NetworkDispatcher::sendRequest(const Team &team, Msg &&msg)
 {
     using MsgT = std::decay_t<Msg>;
-    enqueueRequest(MsgT::method, urlForEndpoint(MsgT::endpoint, msg.serialize(), getTokenForMsg<Msg>(team)));
+    return enqueueRequest(MsgT::method, urlForEndpoint(MsgT::endpoint, msg.serialize(), getTokenForMsg<Msg>(team)));
 }
 
 template<typename Msg>

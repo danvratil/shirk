@@ -3,6 +3,7 @@
 
 #include <QTest>
 #include <QObject>
+#include <QString>
 
 using namespace Shirk::Core;
 using namespace Shirk::StringLiterals;
@@ -14,19 +15,21 @@ class FuturePromiseTest : public QObject
 private Q_SLOTS:
     void testFinished()
     {
-        Promise promise;
-        Future future = promise.getFuture();
+        Promise<int> promise;
+        Future<int> future = promise.getFuture();
         QVERIFY(!future.isFinished());
 
-        promise.setResult();
+        promise.setResult(42);
 
+        QVERIFY(!future.error().has_value());
         QVERIFY(future.isFinished());
+        QCOMPARE(future.result(), 42);
     }
 
     void testError()
     {
-        Promise promise;
-        Future future = promise.getFuture();
+        Promise<int> promise;
+        Future<int> future = promise.getFuture();
         QVERIFY(!future.isFinished());
 
         promise.setError(u"Error!"_qs);
@@ -73,8 +76,8 @@ private Q_SLOTS:
 
     void testFutureWatcher()
     {
-        Promise promise1;
-        Promise promise2;
+        Promise<int> promise1;
+        Promise<QString> promise2;
         bool doneCalled = false;
 
         FutureWatcher watcher([&doneCalled]() mutable { doneCalled = true; });
@@ -83,11 +86,11 @@ private Q_SLOTS:
         QVERIFY(!watcher.isFinished());
         QVERIFY(!doneCalled);
 
-        promise1.setResult();
+        promise1.setResult(42);
         QVERIFY(!watcher.isFinished());
         QVERIFY(!doneCalled);
 
-        promise2.setResult();
+        promise2.setResult(u"Foo"_qs);
         QVERIFY(watcher.isFinished());
         QVERIFY(doneCalled);
     }
