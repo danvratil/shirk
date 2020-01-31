@@ -65,7 +65,9 @@ constexpr const auto messageEventRegistry = makeEventRegistry<
 template<typename Registry>
 auto findInRegistry(const Registry &registry, QStringView type)
 {
-    return std::find_if(registry.cbegin(), registry.cend(), [type](const auto &v) { return v.name == type; });
+    return std::find_if(registry.cbegin(), registry.cend(), [type](const auto &v) {
+        return v.name == type;
+    });
 }
 
 } // namespace

@@ -44,8 +44,12 @@ public:
     const Team &team() const;
     Team &team();
 
-    UserManager &userManager() { return mUserManager; }
-    ConversationsModel &conversations() { return mConversations; }
+    UserManager &userManager() {
+        return mUserManager;
+    }
+    ConversationsModel &conversations() {
+        return mConversations;
+    }
 
     Status status() const;
 

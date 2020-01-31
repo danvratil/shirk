@@ -19,7 +19,9 @@ public:
     explicit UserManager(const Team &team, Environment &environment);
     ~UserManager() override = default;
 
-    const Team &team() const { return mTeam; }
+    const Team &team() const {
+        return mTeam;
+    }
 
     std::optional<std::reference_wrapper<const UserData>> getUserData(const User::Id &id);
 

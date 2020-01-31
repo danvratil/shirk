@@ -22,7 +22,9 @@ public:
     Q_PROPERTY(QDateTime lastSet MEMBER lastSet CONSTANT)
 
     // For Q_PROPERTY
-    const Shirk::Core::User *creatorPtr() const { return creator.get(); }
+    const Shirk::Core::User *creatorPtr() const {
+        return creator.get();
+    }
 
     QString value;
     std::unique_ptr<User> creator;

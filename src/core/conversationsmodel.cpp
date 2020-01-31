@@ -6,9 +6,15 @@ using namespace Shirk::Core;
 
 namespace {
 
-inline bool isRoot(const QModelIndex &index) { return !index.isValid(); }
-inline bool isGroup(const QModelIndex &index) { return index.isValid() && index.internalPointer() == nullptr; }
-inline bool isConversation(const QModelIndex &index) { return index.isValid() && index.internalPointer() != nullptr; }
+inline bool isRoot(const QModelIndex &index) {
+    return !index.isValid();
+}
+inline bool isGroup(const QModelIndex &index) {
+    return index.isValid() && index.internalPointer() == nullptr;
+}
+inline bool isConversation(const QModelIndex &index) {
+    return index.isValid() && index.internalPointer() != nullptr;
+}
 
 }
 
@@ -103,8 +109,10 @@ QVariant ConversationsModel::data(const QModelIndex &index, int role) const
         switch (role) {
         case Qt::DisplayRole:
             switch (index.column()) {
-            case 0: return conversation->name();
-            case 1: return conversation->unreadCountDisplay();
+            case 0:
+                return conversation->name();
+            case 1:
+                return conversation->unreadCountDisplay();
             }
             return {};
         default:

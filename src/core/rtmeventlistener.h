@@ -21,8 +21,7 @@ public:
     virtual ~RTMEventListener();
 
     template<typename Event>
-    void subscribeTo()
-    {
+    void subscribeTo() {
         subscribeTo(Event::type);
     }
 

@@ -49,39 +49,33 @@ struct SharedState : public SharedStateBase
 
     std::aligned_storage_t<sizeof(ResultType), alignof(ResultType)> result{};
 
-    ResultType getResult() const
-    {
+    ResultType getResult() const {
         return *reinterpret_cast<ResultType *>(&result);
     }
 
-    ResultType &&getResult()
-    {
+    ResultType &&getResult() {
         return std::move(*reinterpret_cast<ResultType *>(&result));
     }
 
-    void setResult(const ResultType &value)
-    {
+    void setResult(const ResultType &value) {
         new (reinterpret_cast<ResultType *>(&result)) ResultType(value);
         hasResult = true;
     }
 
-    void setResult(ResultType &&value)
-    {
+    void setResult(ResultType &&value) {
         new (reinterpret_cast<ResultType *>(&result)) ResultType(std::move(value));
         hasResult = true;
     }
 
     template<typename U,
              typename = std::enable_if_t<std::is_convertible_v<U, ResultType>>>
-    void setResult(const U &value)
-    {
+    void setResult(const U &value) {
         new (reinterpret_cast<ResultType *>(&result)) ResultType(value);
         hasResult = true;
     }
 
     template<typename U, typename = std::enable_if_t<std::is_convertible_v<U, ResultType>>>
-    void setResult(U &&value)
-    {
+    void setResult(U &&value) {
         new (reinterpret_cast<ResultType *>(&result)) ResultType(std::move(value));
         hasResult = true;
     }
@@ -127,13 +121,11 @@ public:
     explicit Future() = default;
     Future(const Future &) = delete;
     Future &operator=(const Future &) = delete;
-    Future(Future &&other)
-    {
+    Future(Future &&other) {
         *this = std::move(other);
     }
 
-    Future &operator=(Future &&other)
-    {
+    Future &operator=(Future &&other) {
         std::swap(mState, other.mState);
         mState->removeObserver(&other);
         mState->addObserver(this);
@@ -142,25 +134,21 @@ public:
 
     ~Future() = default;
 
-    std::optional<QString> error() const
-    {
+    std::optional<QString> error() const {
         return mState->error;
     }
 
-    bool isFinished() const
-    {
+    bool isFinished() const {
         return mState->error.has_value() || mState->hasResult;
     }
 
     template<typename U = ResultType, typename = std::enable_if_t<!std::is_void_v<U>>>
-    U result() const
-    {
+    U result() const {
         return mState->getResult();
     }
 
     template<typename U = ResultType, typename = std::enable_if_t<!std::is_void_v<U>>>
-    U &&result()
-    {
+    U &&result() {
         return mState->getResult();
     }
 
@@ -215,13 +203,11 @@ public:
     Promise &operator=(Promise &&) = default;
     ~Promise() = default;
 
-    Future<T> getFuture()
-    {
+    Future<T> getFuture() {
         return Future<T>(mState);
     }
 
-    void setError(const ErrorType &error)
-    {
+    void setError(const ErrorType &error) {
         Q_ASSERT(mState);
         Q_ASSERT(!mState->hasResult && !mState->error.has_value());
         mState->error = error;
@@ -229,8 +215,7 @@ public:
     }
 
     template<typename U, typename = std::enable_if_t<!std::is_void_v<U>>>
-    void setResult(const U &result)
-    {
+    void setResult(const U &result) {
         Q_ASSERT(mState);
         Q_ASSERT(!mState->hasResult && !mState->error.has_value());
         mState->setResult(result);
@@ -238,8 +223,7 @@ public:
     }
 
     template<typename U, typename = std::enable_if_t<!std::is_void_v<U>>>
-    void setResult(U &&result)
-    {
+    void setResult(U &&result) {
         Q_ASSERT(mState);
         Q_ASSERT(!mState->hasResult && !mState->error.has_value());
         mState->setResult(std::move(result));
@@ -249,8 +233,7 @@ public:
 
 
     template<typename U = T, typename = std::enable_if_t<std::is_void_v<U>>>
-    void setResult()
-    {
+    void setResult() {
         Q_ASSERT(mState);
         Q_ASSERT(!mState->hasResult && !mState->error.has_value());
         mState->hasResult = true;
@@ -258,8 +241,7 @@ public:
     }
 
 private:
-    void notify()
-    {
+    void notify() {
         auto observers = mState->observers;
         std::for_each(observers.begin(), observers.end(),
                       std::bind(&detail::SharedStateObserver::notify, std::placeholders::_1, mState.get()));
@@ -285,15 +267,13 @@ public:
     explicit FutureWatcher() = default;
     explicit FutureWatcher(Callback &&cb);
     template<typename U>
-    FutureWatcher(Future<U> &&future)
-    {
+    FutureWatcher(Future<U> &&future) {
         addSharedState(std::move(future.mState));
     }
 
     template<typename U>
     FutureWatcher(Future<U> &&future, Callback &&cb)
-        : mCallback(std::move(cb))
-    {
+        : mCallback(std::move(cb)) {
         addSharedState(std::move(future.mState));
     }
 
@@ -304,14 +284,12 @@ public:
     ~FutureWatcher();
 
     template<typename U>
-    void operator()(Future<U> &&future)
-    {
+    void operator()(Future<U> &&future) {
         addSharedState(std::move(future.mState));
     }
 
     template<typename F, typename ... Futures>
-    void operator()(F &&f, Futures && ... futures)
-    {
+    void operator()(F &&f, Futures && ... futures) {
         addSharedState(std::move(f.mState));
         (*this)(std::forward<Futures>(futures) ...);
     }

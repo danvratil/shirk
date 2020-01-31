@@ -13,8 +13,7 @@ struct FindUserById {
     FindUserById(const User::Id &id)
         : mId(id) {}
 
-    bool operator()(const UserManager::PendingRequest &request) const
-    {
+    bool operator()(const UserManager::PendingRequest &request) const {
         return request.userId == mId;
     }
 

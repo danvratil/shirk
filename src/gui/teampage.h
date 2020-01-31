@@ -17,7 +17,9 @@ class TeamPage : public QWidget
 public:
     TeamPage(Core::TeamController &team, Core::Environment &environment);
 
-    Core::TeamController &team() const { return mTeam; }
+    Core::TeamController &team() const {
+        return mTeam;
+    }
 
 private:
     Core::TeamController &mTeam;

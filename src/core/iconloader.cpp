@@ -45,7 +45,7 @@ void IconLoader::load(const QVector<QUrl> &urls, Callback &&callback)
     auto sharedState = std::make_shared<SharedState>(SharedState{urls.size(), std::move(callback), QIcon{}});
     for (const auto &url : urls) {
         load(url, [sharedState](const QIcon &icon) {
-                sharedState->done(icon);
+            sharedState->done(icon);
         });
     }
 

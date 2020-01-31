@@ -13,8 +13,7 @@ class FuturePromiseTest : public QObject
     Q_OBJECT
 
 private Q_SLOTS:
-    void testFinished()
-    {
+    void testFinished() {
         Promise<int> promise;
         Future<int> future = promise.getFuture();
         QVERIFY(!future.isFinished());
@@ -26,8 +25,7 @@ private Q_SLOTS:
         QCOMPARE(future.result(), 42);
     }
 
-    void testError()
-    {
+    void testError() {
         Promise<int> promise;
         Future<int> future = promise.getFuture();
         QVERIFY(!future.isFinished());
@@ -39,8 +37,7 @@ private Q_SLOTS:
         QCOMPARE(future.error().value(), u"Error!"_qs);
     }
 
-    void testVoid()
-    {
+    void testVoid() {
         Promise<void> promise;
         Future<void> future = promise.getFuture();
         QVERIFY(!future.isFinished());
@@ -50,8 +47,7 @@ private Q_SLOTS:
         QVERIFY(future.isFinished());
     }
 
-    void testVoidContinuation()
-    {
+    void testVoidContinuation() {
         Promise<void> promise;
         bool continuationCalled = false;
         auto baseFuture = promise.getFuture();
@@ -69,8 +65,7 @@ private Q_SLOTS:
         QVERIFY(continuationCalled);
     }
 
-    void testTempVoidContinuation()
-    {
+    void testTempVoidContinuation() {
         Promise<void> promise;
         bool continuationCalled = false;
         Future<void> future = promise.getFuture().then([&continuationCalled]() mutable {
@@ -85,8 +80,7 @@ private Q_SLOTS:
         QVERIFY(future.isFinished());
     }
 
-    void testArgContinuation()
-    {
+    void testArgContinuation() {
         Promise<int> promise;
         int continuationValue = 0;
         auto baseFuture = promise.getFuture();
@@ -104,8 +98,7 @@ private Q_SLOTS:
         QCOMPARE(continuationValue, 42);
     }
 
-    void testArgContinuationTemp()
-    {
+    void testArgContinuationTemp() {
         Promise<int> promise;
         int continuationValue = 0;
         auto future = promise.getFuture().then([&continuationValue](int value) mutable {
@@ -120,8 +113,7 @@ private Q_SLOTS:
         QCOMPARE(continuationValue, 42);
     }
 
-    void testVoidContinuationReturningFuture()
-    {
+    void testVoidContinuationReturningFuture() {
         Promise<void> promise;
         bool continuationCalled = false;
         auto baseFuture = promise.getFuture();
@@ -147,8 +139,7 @@ private Q_SLOTS:
         QCOMPARE(thenFuture.result(), 42);
     }
 
-    void testVoidContinuationReturningFutureTemp()
-    {
+    void testVoidContinuationReturningFutureTemp() {
         Promise<void> promise;
         bool continuationCalled = false;
         Promise<int> thenPromise;
@@ -171,8 +162,7 @@ private Q_SLOTS:
         QVERIFY(future.isFinished());
     }
 
-    void testArgContinuationReturningFuture()
-    {
+    void testArgContinuationReturningFuture() {
         Promise<int> basePromise;
         int continuationValue = 0;
         Promise<QString> thenPromise;
@@ -199,8 +189,7 @@ private Q_SLOTS:
         QCOMPARE(thenFuture.result(), u"foo"_qs);
     }
 
-    void testArgContinuationReturningFutureTmp()
-    {
+    void testArgContinuationReturningFutureTmp() {
         Promise<int> basePromise;
         int continuationValue = 0;
         Promise<QString> thenPromise;
@@ -224,8 +213,7 @@ private Q_SLOTS:
         QCOMPARE(thenFuture.result(), u"foo"_qs);
     }
 
-    void testFutureWatcher()
-    {
+    void testFutureWatcher() {
         Promise<int> promise1;
         Promise<QString> promise2;
         bool doneCalled = false;

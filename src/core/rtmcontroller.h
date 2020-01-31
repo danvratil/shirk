@@ -31,7 +31,9 @@ public:
         Connecting,
         Connected
     };
-    State state() const { return mState; }
+    State state() const {
+        return mState;
+    }
 
     void subscribeListener(RTMEventListener *listener, SlackAPI::RTM::EventType event);
     void unsubscribeListener(RTMEventListener *listener, SlackAPI::RTM::EventType event);

@@ -129,7 +129,9 @@ struct Event
     Event &operator=(const Event &) = delete;
     Event &operator=(Event &&) = delete;
 
-    EventType eventType() const { return *type_ptr; }
+    EventType eventType() const {
+        return *type_ptr;
+    }
 
 protected:
     explicit constexpr Event(const EventType *type)
@@ -183,8 +185,7 @@ struct MessageEvent : public Event
 
 protected:
     template<typename EventType>
-    static std::unique_ptr<EventType> makeEvent(const QJsonValue &value)
-    {
+    static std::unique_ptr<EventType> makeEvent(const QJsonValue &value) {
         std::unique_ptr<EventType> event{new EventType{}};
         parseBase(event.get(), value);
         return event;

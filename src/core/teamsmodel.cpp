@@ -44,14 +44,14 @@ QVariant TeamsModel::data(const QModelIndex &index, int role) const
 
     const auto &controller = mControllers[index.row()];
     switch (role) {
-        case Qt::DisplayRole:
-            return controller->team().name();
-        case Qt::DecorationRole:
-            return controller->team().icon();
-        case TeamRole:
-            return QVariant::fromValue(&controller->team());
-        default:
-            return {};
+    case Qt::DisplayRole:
+        return controller->team().name();
+    case Qt::DecorationRole:
+        return controller->team().icon();
+    case TeamRole:
+        return QVariant::fromValue(&controller->team());
+    default:
+        return {};
     }
 }
 

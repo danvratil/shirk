@@ -45,8 +45,12 @@ public:
     State state() const;
 
     // TODO: Sucks, have start() take a callback maybe?
-    std::unique_ptr<Team> team() { return std::move(mTeam); };
-    Error error() const { return mError; }
+    std::unique_ptr<Team> team() {
+        return std::move(mTeam);
+    };
+    Error error() const {
+        return mError;
+    }
 
 Q_SIGNALS:
     void stateChanged(State state);
