@@ -1,5 +1,6 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
+add_subdirectory(3rdparty)
 add_subdirectory(utils)
 add_subdirectory(slackapi)
 add_subdirectory(core)

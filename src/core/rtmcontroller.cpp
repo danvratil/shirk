@@ -76,9 +76,8 @@ void RTMController::start()
 {
     setState(State::Connecting);
 
-    mEnv.networkDispatcher.sendRequest(
-        mTeam, SlackAPI::RTMConnectRequest{},
-        this, [this](const QJsonValue &data) {
+    mEnv.networkDispatcher.sendRequest(mTeam, SlackAPI::RTMConnectRequest{})
+        .then([this](const QJsonValue &data) {
             const auto resp = SlackAPI::RTMConnectResponse::parse(data);
             if (resp.url.isValid()) {
                 mSocket = RTMSocketPtr{new RTMSocket{resp.url}};

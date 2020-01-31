@@ -6,6 +6,7 @@
 #include "slackapi/oauth.h"
 #include "slackapi/teaminfo.h"
 #include "utils/compat.h"
+#include "utils/stringliterals.h"
 
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -15,6 +16,7 @@
 #include <QUuid>
 
 using namespace Shirk::Core;
+using namespace Shirk::StringLiterals;
 
 AuthController::AuthController(Environment &environment)
     : mEnv(environment)
@@ -70,12 +72,12 @@ void AuthController::launchBrowser()
     Q_ASSERT(mServer);
 
     mAuthState = QUuid::createUuid().toString(QUuid::WithoutBraces);
-    QUrl url(QStringLiteral("https://slack.com/oauth/authorize"));
+    QUrl url(u"https://slack.com/oauth/authorize"_qs);
     QUrlQuery query(url);
-    query.addQueryItem(QStringLiteral("client_id"), clientId);
-    query.addQueryItem(QStringLiteral("scope"), scopes.join(QLatin1Char(' ')));
-    query.addQueryItem(QStringLiteral("redirect_uri"), QStringLiteral("http://127.0.0.1:%1/").arg(mServer->serverPort()));
-    query.addQueryItem(QStringLiteral("state"), mAuthState);
+    query.addQueryItem(u"client_id"_qs, clientId);
+    query.addQueryItem(u"scope"_qs, scopes.join(QLatin1Char(' ')));
+    query.addQueryItem(u"redirect_uri"_qs, u"http://127.0.0.1:%1/"_qs.arg(mServer->serverPort()));
+    query.addQueryItem(u"state"_qs, mAuthState);
     url.setQuery(query);
 
     if (!QDesktopServices::openUrl(url)) {
@@ -111,7 +113,7 @@ std::optional<Result> parseCode(const QByteArray &data)
 
     const QUrl url(QString::fromLatin1(line.at(1)));
     const QUrlQuery query(url);
-    return Result{query.queryItemValue(QStringLiteral("code")), query.queryItemValue(QStringLiteral("state"))};
+    return Result{query.queryItemValue(u"code"_qs), query.queryItemValue(u"state"_qs)};
 }
 }
 
@@ -139,23 +141,22 @@ void AuthController::readFromSocket(std::unique_ptr<QTcpSocket, DeleteLater> soc
 void AuthController::exchangeCodeForToken(const QString &code, std::function<void(const SlackAPI::OAuthAccessResponse&)> &&cb)
 {
     setState(State::RetrievingToken);
-    mEnv.networkDispatcher.sendRequest(SlackAPI::OAuthAccessRequest{{}, clientId, clientSecret, code,
-            QStringLiteral("http://127.0.0.1:%1/").arg(mServer->serverPort())},
-                            this, [cb = std::move(cb)](const auto &data) {
-                                qCDebug(LOG_CORE) << data;
-                                cb(SlackAPI::OAuthAccessResponse::parse(data));
-                            });
+    mEnv.networkDispatcher.sendRequest(
+            SlackAPI::OAuthAccessRequest{{}, clientId, clientSecret, code,
+                                         u"http://127.0.0.1:%1/"_qs.arg(mServer->serverPort())})
+        .then([cb = std::move(cb)](const auto &data) {
+            cb(SlackAPI::OAuthAccessResponse::parse(data));
+        });
 }
 
 void AuthController::fetchTeamInfo()
 {
     setState(State::RetrievingTeamInfo);
-    mEnv.networkDispatcher.sendRequest(*mTeam.get(),
-                            SlackAPI::TeamInfoRequest{{}, mTeam->id()},
-                            this, [this](const auto &data) mutable {
-                                mTeam->updateFromTeamInfo(SlackAPI::TeamInfoResponse::parse(data));
-                                setState(State::Done);
-                            });
+    mEnv.networkDispatcher.sendRequest(*mTeam.get(), SlackAPI::TeamInfoRequest{{}, mTeam->id()})
+        .then([this](const auto &data) mutable {
+            mTeam->updateFromTeamInfo(SlackAPI::TeamInfoResponse::parse(data));
+            setState(State::Done);
+        });
 }
 
 void AuthController::shutdownServer()

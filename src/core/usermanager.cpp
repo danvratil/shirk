@@ -58,26 +58,27 @@ void UserManager::requestData(User *user, DataCallback &&cb)
         mPendingRequests.emplace_back(PendingRequest{user->id(), {{user, std::move(cb)}}});
 
         SlackAPI::UserInfoRequest request{.id = user->id()};
-        mEnvironment.networkDispatcher.sendRequest(mTeam, request, this, [this](const QJsonValue &result) {
-            auto resp = SlackAPI::UserInfoResponse::parse(result);
-            IconLoader::load({resp.info.profile.image_24, resp.info.profile.image_32, resp.info.profile.image_48,
-                              resp.info.profile.image_72, resp.info.profile.image_192, resp.info.profile.image_512 },
-              [this, resp = std::move(resp)](const QIcon &icon) {
-                  const auto userId = resp.info.id;
-                  auto userData = UserData::fromAPI(resp.info);
-                  userData.avatar = icon;
+        mEnvironment.networkDispatcher.sendRequest(mTeam, request)
+            .then([this](const QJsonValue &result) {
+                auto resp = SlackAPI::UserInfoResponse::parse(result);
+                IconLoader::load({resp.info.profile.image_24, resp.info.profile.image_32, resp.info.profile.image_48,
+                                  resp.info.profile.image_72, resp.info.profile.image_192, resp.info.profile.image_512 },
+                  [this, resp = std::move(resp)](const QIcon &icon) {
+                      const auto userId = resp.info.id;
+                      auto userData = UserData::fromAPI(resp.info);
+                      userData.avatar = icon;
 
-                  auto dataIt = mUserData.insert(std::make_pair(userId, std::move(userData)));
-                  auto userIt = std::find_if(mPendingRequests.begin(), mPendingRequests.end(), FindUserById{userId});
-                  Q_ASSERT(userIt != mPendingRequests.end());
+                      auto dataIt = mUserData.insert(std::make_pair(userId, std::move(userData)));
+                      auto userIt = std::find_if(mPendingRequests.begin(), mPendingRequests.end(), FindUserById{userId});
+                      Q_ASSERT(userIt != mPendingRequests.end());
 
-                  for (auto &cb: userIt->requests) {
-                      cb.second(dataIt.first->first, dataIt.first->second);
-                  }
+                      for (auto &cb: userIt->requests) {
+                          cb.second(dataIt.first->first, dataIt.first->second);
+                      }
 
-                  mPendingRequests.erase(userIt);
-              });
-        });
+                      mPendingRequests.erase(userIt);
+                  });
+            });
     }
 }
 

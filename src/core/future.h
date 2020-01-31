@@ -7,9 +7,13 @@
 #include <functional>
 #include <type_traits>
 
+#include <function2/function2.hpp>
+
 namespace Shirk::Core
 {
 
+template<typename T>
+class Future;
 template<typename T>
 class Promise;
 class FutureWatcher;
@@ -18,8 +22,6 @@ namespace detail
 {
 
 class SharedStateObserver;
-
-struct VoidType {};
 
 struct SharedStateBase : std::enable_shared_from_this<SharedStateBase>
 {
@@ -36,6 +38,7 @@ struct SharedStateBase : std::enable_shared_from_this<SharedStateBase>
 
     std::vector<SharedStateObserver *> observers;
     std::optional<ErrorType> error;
+    fu2::unique_function<void()> continuation;
     bool hasResult = false;
 };
 
@@ -45,6 +48,44 @@ struct SharedState : public SharedStateBase
     using ResultType = T;
 
     std::aligned_storage_t<sizeof(ResultType), alignof(ResultType)> result{};
+
+    ResultType getResult() const
+    {
+        return *reinterpret_cast<ResultType *>(&result);
+    }
+
+    ResultType &&getResult()
+    {
+        return std::move(*reinterpret_cast<ResultType *>(&result));
+    }
+
+    void setResult(const ResultType &value)
+    {
+        new (reinterpret_cast<ResultType *>(&result)) ResultType(value);
+        hasResult = true;
+    }
+
+    void setResult(ResultType &&value)
+    {
+        new (reinterpret_cast<ResultType *>(&result)) ResultType(std::move(value));
+        hasResult = true;
+    }
+
+    template<typename U,
+             typename = std::enable_if_t<std::is_convertible_v<U, ResultType>>>
+    void setResult(const U &value)
+    {
+        new (reinterpret_cast<ResultType *>(&result)) ResultType(value);
+        hasResult = true;
+    }
+
+    template<typename U, typename = std::enable_if_t<std::is_convertible_v<U, ResultType>>>
+    void setResult(U &&value)
+    {
+        new (reinterpret_cast<ResultType *>(&result)) ResultType(std::move(value));
+        hasResult = true;
+    }
+
 };
 
 template<>
@@ -59,6 +100,21 @@ protected:
     virtual void notify(detail::SharedStateBase *) {};
 };
 
+template<typename T>
+struct future_type;
+
+template<typename T>
+struct future_type<Future<T>>
+{
+    using type = T;
+};
+
+template<typename F, typename ... Arg>
+struct continuation_traits
+{
+    using future_type = typename future_type<std::invoke_result_t<F, Arg ...>>::type;
+};
+
 } // namespace detail
 
 template<typename T>
@@ -71,8 +127,18 @@ public:
     explicit Future() = default;
     Future(const Future &) = delete;
     Future &operator=(const Future &) = delete;
-    Future(Future &&other) = default;
-    Future &operator=(Future &&other) = default;
+    Future(Future &&other)
+    {
+        *this = std::move(other);
+    }
+
+    Future &operator=(Future &&other)
+    {
+        std::swap(mState, other.mState);
+        mState->removeObserver(&other);
+        mState->addObserver(this);
+        return *this;
+    }
 
     ~Future() = default;
 
@@ -89,14 +155,35 @@ public:
     template<typename U = ResultType, typename = std::enable_if_t<!std::is_void_v<U>>>
     U result() const
     {
-        return *reinterpret_cast<U *>(&mState->result);
+        return mState->getResult();
     }
 
     template<typename U = ResultType, typename = std::enable_if_t<!std::is_void_v<U>>>
     U &&result()
     {
-        return std::move(*reinterpret_cast<U *>(&mState->result));
+        return mState->getResult();
     }
+
+    struct voidT_t {};
+    struct voidVoid_t {};
+    struct futureUT_t {};
+    struct futureUVoid_t {};
+
+    // F is void(T)
+    template<typename F, typename = std::enable_if_t<std::is_void_v<std::invoke_result_t<F, T>>>>
+    Future<void> then(F &&cb, voidT_t = {});
+
+    // F is void()
+    template<typename F, typename = std::enable_if_t<std::is_void_v<std::invoke_result_t<F>>>>
+    Future<void> then(F &&cb, voidVoid_t = {});
+
+    // F is Future<U>(T)
+    template<typename F, typename U = typename std::invoke_result_t<F, T>::ResultType>
+    Future<U> then(F &&cb, futureUT_t = {});
+
+    // F is Future<U>()
+    template<typename F, typename U = typename std::invoke_result_t<F>::ResultType>
+    Future<U> then(F &&cb, futureUVoid_t = {});
 
 private:
     template<typename U> friend class Promise;
@@ -141,25 +228,25 @@ public:
         notify();
     }
 
-    template<typename U = T, typename = std::enable_if_t<!std::is_void_v<U>>>
+    template<typename U, typename = std::enable_if_t<!std::is_void_v<U>>>
     void setResult(const U &result)
     {
         Q_ASSERT(mState);
         Q_ASSERT(!mState->hasResult && !mState->error.has_value());
-        new (reinterpret_cast<U *>(&mState->result)) U(result);
-        mState->hasResult = true;
+        mState->setResult(result);
         notify();
     }
 
-    template<typename U = T, typename = std::enable_if_t<!std::is_void_v<U>>>
+    template<typename U, typename = std::enable_if_t<!std::is_void_v<U>>>
     void setResult(U &&result)
     {
         Q_ASSERT(mState);
         Q_ASSERT(!mState->hasResult && !mState->error.has_value());
-        new (reinterpret_cast<U *>(&mState->result)) U(std::move(result));
-        mState->hasResult = true;
+        mState->setResult(std::move(result));
         notify();
     }
+
+
 
     template<typename U = T, typename = std::enable_if_t<std::is_void_v<U>>>
     void setResult()
@@ -176,6 +263,11 @@ private:
         auto observers = mState->observers;
         std::for_each(observers.begin(), observers.end(),
                       std::bind(&detail::SharedStateObserver::notify, std::placeholders::_1, mState.get()));
+
+        if (mState->continuation) {
+            mState->continuation();
+        }
+
         mState.reset();
     }
 
@@ -235,5 +327,64 @@ private:
     QStringList mErrors;
     int mFinished = 0;
 };
+
+
+template<typename T>
+template<typename F, typename>
+Future<void> Future<T>::then(F &&cb, voidT_t)
+{
+    Promise<void> nextPromise;
+    auto nextFuture = nextPromise.getFuture();
+    mState->continuation = [cb = std::move(cb), promise = std::move(nextPromise),
+                            state = std::weak_ptr<detail::SharedState<T>>(mState)]() mutable {
+        cb(state.lock()->getResult());
+        promise.setResult();
+    };
+    return nextFuture;
+}
+
+template<typename T>
+template<typename F, typename>
+Future<void> Future<T>::then(F &&cb, voidVoid_t)
+{
+    Promise<void> nextPromise;
+    auto nextFuture = nextPromise.getFuture();
+    mState->continuation = [cb = std::move(cb), promise = std::move(nextPromise)]() mutable {
+        cb();
+        promise.setResult();
+    };
+    return nextFuture;
+}
+
+template<typename T>
+template<typename F, typename U>
+Future<U> Future<T>::then(F &&cb, futureUT_t)
+{
+    Promise<U> nextPromise;
+    auto nextFuture = nextPromise.getFuture();
+    mState->continuation = [cb = std::move(cb), promise = std::move(nextPromise),
+                            state = mState]() mutable {
+        cb(state->getResult()).then([promise = std::move(promise)](U &&val) mutable {
+            promise.setResult(std::move(val));
+        });
+        state.reset();
+    };
+    return nextFuture;
+}
+
+template<typename T>
+template<typename F, typename U>
+Future<U> Future<T>::then(F &&cb, futureUVoid_t)
+{
+    Promise<U> nextPromise;
+    auto nextFuture = nextPromise.getFuture();
+    mState->continuation = [cb = std::move(cb), promise = std::move(nextPromise)]() mutable {
+        cb().then([promise = std::move(promise)](U &&val) mutable {
+            promise.setResult(std::move(val));
+        });
+    };
+    return nextFuture;
+}
+
 
 } // namespace

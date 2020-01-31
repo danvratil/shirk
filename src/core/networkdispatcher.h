@@ -32,19 +32,19 @@ public:
     ~NetworkDispatcher() override;
 
     template<typename Msg>
-    Future<QJsonObject> sendRequest(Msg &&msg);
+    Future<QJsonValue> sendRequest(Msg &&msg);
 
     template<typename Msg>
-    Future<QJsonObject> sendRequest(const Team &team, Msg &&msg);
+    Future<QJsonValue> sendRequest(const Team &team, Msg &&msg);
 
 private:
     struct Request {
         SlackAPI::Method method;
         QUrl url;
-        Promise<QJsonObject> promise;
+        Promise<QJsonValue> promise;
     };
 
-    Future<QJsonObject> enqueueRequest(SlackAPI::Method method, const QUrl &url);
+    Future<QJsonValue> enqueueRequest(SlackAPI::Method method, const QUrl &url);
     QUrl urlForEndpoint(QStringView endpoint, const QUrlQuery &query, std::optional<QString> token = std::nullopt) const;
     void tryDispatchNextRequest();
     void dispatchRequest(Request &&request);
@@ -61,14 +61,14 @@ private:
 
 
 template<typename Msg>
-Future<QJsonObject> NetworkDispatcher::sendRequest(Msg &&msg)
+Future<QJsonValue> NetworkDispatcher::sendRequest(Msg &&msg)
 {
     using MsgT = std::decay_t<Msg>;
     return enqueueRequest(MsgT::method, urlForEndpoint(MsgT::endpoint, msg.serialize()));
 }
 
 template<typename Msg>
-Future<QJsonObject> NetworkDispatcher::sendRequest(const Team &team, Msg &&msg)
+Future<QJsonValue> NetworkDispatcher::sendRequest(const Team &team, Msg &&msg)
 {
     using MsgT = std::decay_t<Msg>;
     return enqueueRequest(MsgT::method, urlForEndpoint(MsgT::endpoint, msg.serialize(), getTokenForMsg<Msg>(team)));
