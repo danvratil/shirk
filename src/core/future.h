@@ -118,7 +118,6 @@ public:
     using ErrorType = typename detail::SharedState<T>::ErrorType;
     using ResultType = typename detail::SharedState<T>::ResultType;
 
-    explicit Future() = default;
     Future(const Future &) = delete;
     Future &operator=(const Future &) = delete;
     Future(Future &&other) {
@@ -204,6 +203,7 @@ public:
     ~Promise() = default;
 
     Future<T> getFuture() {
+        Q_ASSERT(mState);
         return Future<T>(mState);
     }
 

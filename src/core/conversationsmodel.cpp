@@ -1,6 +1,10 @@
 #include "conversationsmodel.h"
 #include "teamcontroller.h"
 #include "environment.h"
+#include "networkdispatcher.h"
+#include "slackapi/conversations.h"
+#include <memory>
+#include <qnamespace.h>
 
 using namespace Shirk::Core;
 
@@ -22,6 +26,45 @@ ConversationsModel::ConversationsModel(TeamController &controller, Environment &
     : mController(controller)
     , mEnvironment(environment)
 {
+}
+
+Future<void> ConversationsModel::populate()
+{
+    Promise<void> promise;
+    auto future = promise.getFuture();
+    SlackAPI::ConversationsListRequest request{
+        .types = {SlackAPI::ConversationsListRequest::Type::PublicChannel,
+                  SlackAPI::ConversationsListRequest::Type::PrivateChannel,
+                  SlackAPI::ConversationsListRequest::Type::MPIM,
+                  SlackAPI::ConversationsListRequest::Type::IM}
+    };
+    mEnvironment.networkDispatcher.sendRequest(mController.team(), std::move(request))
+        .then([this, promise = std::move(promise)](const QJsonValue &value) mutable {
+            const auto resp = SlackAPI::ConversationsListResponse::parse(value);
+            beginResetModel();
+            mGroups.clear();
+            mGroups.emplace_back(std::make_unique<Group>(tr("Channels")));
+            mGroups.emplace_back(std::make_unique<Group>(tr("Direct")));
+            for (const auto &chann: resp.channels) {
+                auto conv = std::make_unique<Conversation>(chann.id, mController.userManager());
+                conv->updateFromConversation(chann);
+
+                switch (conv->type()) {
+                case Conversation::Type::Channel:
+                case Conversation::Type::Group:
+                    mGroups[0]->conversations.push_back(std::move(conv));
+                    break;
+                case Conversation::Type::IM:
+                case Conversation::Type::MPIM:
+                    mGroups[1]->conversations.push_back(std::move(conv));
+                    break;
+                }
+            }
+            endResetModel();
+            promise.setResult();
+        });
+
+    return future;
 }
 
 int ConversationsModel::rowCount(const QModelIndex &parent) const
@@ -110,11 +153,24 @@ QVariant ConversationsModel::data(const QModelIndex &index, int role) const
         case Qt::DisplayRole:
             switch (index.column()) {
             case 0:
-                return conversation->name();
+                switch (conversation->type()) {
+                case Conversation::Type::Channel:
+                case Conversation::Type::Group:
+                    return conversation->name();
+                case Conversation::Type::IM:
+                case Conversation::Type::MPIM:
+                    return tr("Unsupported");
+                }
             case 1:
                 return conversation->unreadCountDisplay();
             }
             return {};
+        case Qt::ForegroundRole:
+            if (conversation->isMember()) {
+                return QColor{Qt::black};
+            } else {
+                return QColor{Qt::gray};
+            }
         default:
             return {};
         }

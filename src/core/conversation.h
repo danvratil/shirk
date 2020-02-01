@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QDateTime>
 
+#include "slackapi/common.h"
 #include "user.h"
 
 Q_DECLARE_METATYPE(Shirk::Core::User *)
@@ -43,6 +44,14 @@ class Conversation : public QObject
     Q_OBJECT
 
 public:
+    enum class Type {
+        Channel, /// public channel
+        IM,      /// private conversation between two users or user and bot
+        MPIM,    /// private unnamed conversation between multiple users
+        Group    /// private channel
+    };
+
+
     Q_PROPERTY(QString id READ id CONSTANT)
     Q_PROPERTY(QString name READ name NOTIFY conversationChanged)
     Q_PROPERTY(QStringList previousNames READ previousNames NOTIFY conversationChanged)
@@ -65,6 +74,7 @@ public:
     Q_PROPERTY(bool isIM READ isIM NOTIFY conversationChanged)
     Q_PROPERTY(bool isMPIM READ isMPIM NOTIFY conversationChanged)
     Q_PROPERTY(bool isPrivate READ isPrivate NOTIFY conversationChanged)
+    Q_PROPERTY(Shirk::Core::Conversation::Type type READ type NOTIFY conversationChanged)
 
     Q_PROPERTY(bool isShared READ isShared NOTIFY conversationChanged)
 
@@ -98,6 +108,8 @@ public:
     bool isMPIM() const { return mIsMPIM; }
     bool isPrivate() const { return mIsPrivate; }
     bool isShared() const { return mIsShared; }
+
+    Type type() const;
 
     const ConversationInfo &topic() const { return mTopic; }
     const ConversationInfo &purpose() const { return mPurpose; }
@@ -140,5 +152,6 @@ private:
 
     UserManager &mUserManager;
 };
+
 
 } // namespace

@@ -80,3 +80,15 @@ QUrlQuery ConversationsListRequest::serialize() const
 
     return query;
 }
+
+ConversationsListResponse ConversationsListResponse::parse(const QJsonValue &value)
+{
+    ConversationsListResponse resp;
+    const auto convs = value["channels"_ql1].toArray();
+    for (const auto &conv : convs) {
+        resp.channels.push_back(Conversation::parse(conv));
+    }
+
+    return resp;
+}
+

@@ -6,6 +6,11 @@
 #include "usermanager.h"
 #include "rtmcontroller.h"
 #include "core_debug.h"
+#include "future.h"
+#include "networkdispatcher.h"
+
+#include "utils/compat.h"
+#include "slackapi/conversations.h"
 
 #include <QMetaEnum>
 #include <QMetaObject>
@@ -58,10 +63,29 @@ void TeamController::start()
 {
     setStatus(Status::Connecting);
 
-    mRTMController = std::make_unique<RTMController>(*mTeam.get(), mEnv);
+    FutureWatcher startWatcher;
+
+    mRTMController = make_unique_qobject<RTMController>(*mTeam.get(), mEnv);
     mRTMController->start();
-
-
+    Promise<void> rtmPromise;
+    startWatcher(rtmPromise.getFuture());
+    connect(mRTMController.get(), &RTMController::stateChanged,
+            this, [this, rtmPromise = std::move(rtmPromise)](RTMController::State state) mutable {
+                switch (state) {
+                case RTMController::State::Connecting:
+                    qCDebug(LOG_CORE) << "RTMController connecting ...";
+                    break;
+                case RTMController::State::Connected:
+                    qCDebug(LOG_CORE) << "RTMController connected.";
+                    rtmPromise.setResult();
+                    break;
+                case RTMController::State::Disconnected:
+                    qCDebug(LOG_CORE) << "RTMController disconnected!";
+                    mRTMController.reset();
+                    break;
+                }
+            });
+    startWatcher(mConversations.populate());
 }
 
 void TeamController::quit()

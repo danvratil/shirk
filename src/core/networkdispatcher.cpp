@@ -20,9 +20,10 @@ NetworkDispatcher::~NetworkDispatcher() = default;
 
 Future<QJsonValue> NetworkDispatcher::enqueueRequest(SlackAPI::Method method, const QUrl &url)
 {
-    mPendingRequests.emplace_back(Request{method, url, Promise<QJsonValue>{}});
+    auto &request = mPendingRequests.emplace_back(Request{method, url, Promise<QJsonValue>{}});
+    auto future = request.promise.getFuture();
     tryDispatchNextRequest();
-    return mPendingRequests.back().promise.getFuture();
+    return future;
 }
 
 

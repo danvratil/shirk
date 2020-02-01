@@ -8,6 +8,21 @@ Conversation::Conversation(const QString &id, UserManager &userManager)
     , mUserManager(userManager)
 {}
 
+Conversation::Type Conversation::type() const
+{
+    if (mIsChannel) {
+        return Type::Channel;
+    } else if (mIsGroup) {
+        return Type::Group;
+    } else if (mIsIM) {
+        return Type::IM;
+    } else if (mIsMPIM) {
+        return Type::MPIM;
+    }
+
+    return Type::Channel;
+}
+
 void Conversation::updateFromConversation(const SlackAPI::Conversation &conv)
 {
     mName = conv.name;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "conversation.h"
+#include "future.h"
 
 #include <QAbstractItemModel>
 
@@ -16,6 +17,8 @@ class ConversationsModel : public QAbstractItemModel
 
 public:
     ConversationsModel(TeamController &controller, Environment &environment);
+
+    Future<void> populate();
 
     enum class RowType {
         Header,
@@ -34,6 +37,8 @@ private:
     Environment &mEnvironment;
 
     struct Group {
+        explicit Group(const QString &name): name(name) {}
+
         QString name;
         std::vector<std::unique_ptr<Conversation>> conversations;
     };

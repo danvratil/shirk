@@ -2,6 +2,7 @@
 
 #include "usermanager.h"
 #include "conversationsmodel.h"
+#include "utils/compat.h"
 
 #include <QObject>
 
@@ -68,7 +69,7 @@ private:
 
     UserManager mUserManager;
     ConversationsModel mConversations;
-    std::unique_ptr<RTMController> mRTMController;
+    UniqueQObjectPtr<RTMController> mRTMController;
 
     Status mStatus = Status::Disconnected;
 };

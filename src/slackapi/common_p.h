@@ -16,6 +16,9 @@ inline QString bool2str(bool val)
 
 inline QStringList toStringList(const QJsonValue &val)
 {
+    if (val.isNull() || val.isUndefined()) {
+        return {};
+    }
     Q_ASSERT(val.isArray());
     const auto arr = val.toArray();
     QStringList rv;

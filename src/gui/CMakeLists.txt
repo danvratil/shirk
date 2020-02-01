@@ -4,6 +4,7 @@ set(shirk_gui_SRCS
     addteampage.cpp
     addteampage.ui
     teampage.cpp
+    teampage.ui
 )
 
 ecm_qt_declare_logging_category(shirk_gui_SRCS

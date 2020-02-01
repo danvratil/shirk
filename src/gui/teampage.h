@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include "ui_teampage.h"
 
 namespace Shirk::Core
 {
@@ -22,6 +23,7 @@ public:
     }
 
 private:
+    Ui::TeamPage ui;
     Core::TeamController &mTeam;
     Core::Environment &mEnv;
 };
