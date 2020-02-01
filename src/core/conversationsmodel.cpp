@@ -3,6 +3,8 @@
 #include "environment.h"
 #include "networkdispatcher.h"
 #include "slackapi/conversations.h"
+#include "utils/memory.h"
+
 #include <memory>
 #include <qnamespace.h>
 
@@ -48,23 +50,45 @@ Future<void> ConversationsModel::populate()
             for (const auto &chann: resp.channels) {
                 auto conv = std::make_unique<Conversation>(chann.id, mController.userManager());
                 conv->updateFromConversation(chann);
+                connect(conv.get(), &Conversation::conversationChanged,
+                        this, [this, conv = conv.get()]() {
+                            const auto index = indexForConversation(conv);
+                            Q_EMIT dataChanged(index, index);
+                        });
 
-                switch (conv->type()) {
-                case Conversation::Type::Channel:
-                case Conversation::Type::Group:
-                    mGroups[0]->conversations.push_back(std::move(conv));
-                    break;
-                case Conversation::Type::IM:
-                case Conversation::Type::MPIM:
-                    mGroups[1]->conversations.push_back(std::move(conv));
-                    break;
-                }
+                groupForConversation(conv.get())->conversations.push_back(std::move(conv));
             }
             endResetModel();
             promise.setResult();
         });
 
     return future;
+}
+
+QModelIndex ConversationsModel::indexForGroup(const Group *group) const
+{
+    const auto pos = std::distance(mGroups.cbegin(), std::find_if(mGroups.cbegin(), mGroups.cend(), UniquePtrCompare{group}));
+    return index(pos, 0, {});
+}
+
+QModelIndex ConversationsModel::indexForConversation(const Conversation *conv) const
+{
+    const auto group = groupForConversation(conv);
+    const auto pos = std::distance(group->conversations.cbegin(), std::find(group->conversations.cbegin(),
+                                    group->conversations.cend(), UniquePtrCompare{conv}));
+    return index(pos, 0, indexForGroup(group));
+}
+
+ConversationsModel::Group *ConversationsModel::groupForConversation(const Conversation *conv) const
+{
+    switch (conv->type()) {
+    case Conversation::Type::Channel:
+    case Conversation::Type::Group:
+        return mGroups.at(0).get();
+    case Conversation::Type::IM:
+    case Conversation::Type::MPIM:
+        return mGroups.at(1).get();
+    }
 }
 
 int ConversationsModel::rowCount(const QModelIndex &parent) const
@@ -159,7 +183,7 @@ QVariant ConversationsModel::data(const QModelIndex &index, int role) const
                     return conversation->name();
                 case Conversation::Type::IM:
                 case Conversation::Type::MPIM:
-                    return tr("Unsupported");
+                    return conversation->user()->name();
                 }
             case 1:
                 return conversation->unreadCountDisplay();

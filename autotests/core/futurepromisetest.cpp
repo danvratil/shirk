@@ -213,6 +213,88 @@ private Q_SLOTS:
         QCOMPARE(thenFuture.result(), u"foo"_qs);
     }
 
+    void testArgContinuationReturningValue() {
+        Promise<int> basePromise;
+        int continuationValue = 0;
+
+        auto baseFuture = basePromise.getFuture();
+        auto thenFuture = baseFuture.then([&continuationValue](int value) mutable {
+            continuationValue = value;
+            return QString::number(value);
+        });
+
+        QVERIFY(!baseFuture.isFinished());
+        QVERIFY(!thenFuture.isFinished());
+        QCOMPARE(continuationValue, 0);
+
+        basePromise.setResult(42);
+
+        QVERIFY(baseFuture.isFinished());
+        QCOMPARE(continuationValue, 42);
+        QVERIFY(thenFuture.isFinished());
+        QCOMPARE(thenFuture.result(), u"42"_qs);
+    }
+
+    void testArgContinuationReturningValueTemp() {
+        Promise<int> basePromise;
+        int continuationValue = 0;
+
+        auto thenFuture = basePromise.getFuture().then([&continuationValue](int value) mutable {
+            continuationValue = value;
+            return QString::number(value);
+        });
+
+        QVERIFY(!thenFuture.isFinished());
+        QCOMPARE(continuationValue, 0);
+
+        basePromise.setResult(42);
+
+        QVERIFY(thenFuture.isFinished());
+        QCOMPARE(continuationValue, 42);
+        QCOMPARE(thenFuture.result(), u"42"_qs);
+    }
+
+    void testVoidContinuationReturningValue() {
+        Promise<void> basePromise;
+        bool continuationCalled = false;
+
+        auto baseFuture = basePromise.getFuture();
+        auto thenFuture = baseFuture.then([&continuationCalled]() mutable {
+            continuationCalled = true;
+            return 42;
+        });
+
+        QVERIFY(!baseFuture.isFinished());
+        QVERIFY(!thenFuture.isFinished());
+        QVERIFY(!continuationCalled);
+
+        basePromise.setResult();
+
+        QVERIFY(baseFuture.isFinished());
+        QVERIFY(continuationCalled);
+        QVERIFY(thenFuture.isFinished());
+        QCOMPARE(thenFuture.result(), 42);
+    }
+
+    void testVoidContinuationReturningValueTemp() {
+        Promise<void> basePromise;
+        bool continuationCalled = false;
+
+        auto thenFuture = basePromise.getFuture().then([&continuationCalled]() mutable {
+            continuationCalled = true;
+            return 42;
+        });
+
+        QVERIFY(!thenFuture.isFinished());
+        QVERIFY(!continuationCalled);
+
+        basePromise.setResult();
+
+        QVERIFY(thenFuture.isFinished());
+        QVERIFY(continuationCalled);
+        QCOMPARE(thenFuture.result(), 42);
+    }
+
     void testFutureWatcher() {
         Promise<int> promise1;
         Promise<QString> promise2;

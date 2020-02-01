@@ -54,6 +54,7 @@ public:
 
     Q_PROPERTY(QString id READ id CONSTANT)
     Q_PROPERTY(QString name READ name NOTIFY conversationChanged)
+    Q_PROPERTY(const Shirk::Core::User* user READ user NOTIFY conversationChanged)
     Q_PROPERTY(QStringList previousNames READ previousNames NOTIFY conversationChanged)
     Q_PROPERTY(const Shirk::Core::User* creator READ creator CONSTANT)
     Q_PROPERTY(int memberCount READ memberCount NOTIFY conversationChanged)
@@ -87,6 +88,7 @@ public:
 
     QString id() const { return mId; }
     QString name() const { return mName; }
+    const User *user() const { return mUser.get(); }
     QStringList previousNames() const { return mPreviousNames; }
     const User *creator() const { return mCreator.get(); }
 
@@ -129,6 +131,7 @@ Q_SIGNALS:
 private:
     QString mId;
     QString mName;
+    std::unique_ptr<User> mUser;
     QStringList mPreviousNames;
     std::unique_ptr<User> mCreator;
     int mMemberCount = 0;

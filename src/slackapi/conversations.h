@@ -34,7 +34,8 @@ public:
 struct Conversation
 {
     QString id;
-    QString name;
+    QString name; // when is_channel/is_group == true
+    QString user; // when is_im == true
     QString name_normalized;
     QStringList previous_names;
     QString creator;

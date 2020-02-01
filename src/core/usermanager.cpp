@@ -3,6 +3,7 @@
 #include "networkdispatcher.h"
 #include "iconloader.h"
 #include "slackapi/user.h"
+#include "core_debug.h"
 #include <functional>
 
 using namespace Shirk::Core;
@@ -54,16 +55,18 @@ void UserManager::requestData(User *user, DataCallback &&cb)
             userIt != mPendingRequests.end()) {
         userIt->requests.emplace_back(user, std::move(cb));
     } else {
+        qCDebug(LOG_CORE) << "Requesting UserInfo for user" << user->id();
         mPendingRequests.emplace_back(PendingRequest{user->id(), {{user, std::move(cb)}}});
 
         SlackAPI::UserInfoRequest request{.id = user->id()};
-        mEnvironment.networkDispatcher.sendRequest(mTeam, request)
+        mEnvironment.networkDispatcher.sendRequest(mTeam, std::move(request))
             .then([this](const QJsonValue &result) {
                 auto resp = SlackAPI::UserInfoResponse::parse(result);
                 IconLoader::load({resp.info.profile.image_24, resp.info.profile.image_32, resp.info.profile.image_48,
                                   resp.info.profile.image_72, resp.info.profile.image_192, resp.info.profile.image_512 },
                   [this, resp = std::move(resp)](const QIcon &icon) {
                       const auto userId = resp.info.id;
+                      qCDebug(LOG_CORE) << "Received UserInfo for user" << userId;
                       auto userData = UserData::fromAPI(resp.info);
                       userData.avatar = icon;
 

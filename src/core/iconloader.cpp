@@ -1,29 +1,43 @@
 #include "iconloader.h"
+#include "future.h"
+#include "utils/stringliterals.h"
 
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QIcon>
+#include <QStandardPaths>
+#include <QDir>
+#include <QGlobalStatic>
+#include <QLoggingCategory>
 
 #include <memory>
 
+using namespace Shirk;
 using namespace Shirk::Core;
+using namespace Shirk::StringLiterals;
 
-void IconLoader::load(const QUrl &url, Callback &&callback)
+Q_LOGGING_CATEGORY(LOG_ICONLOADER, "cz.dvratil.shirk.core.IconLoader")
+
+Q_GLOBAL_STATIC(QNetworkAccessManager, sNAM)
+
+Future<QIcon> IconLoader::load(const QUrl &url)
 {
     if (const auto icon = loadFromCache(url); icon.has_value()) {
-        callback(*icon);
+        return makeReadyFuture(*icon);
     } else {
-        fetchIcon(url, [url, cb = std::move(callback)](QNetworkReply &reply) {
-            const auto icon = cacheIcon(url, reply.readAll());
-            cb(icon);
+        return fetchIcon(url).then([url](UniqueQObjectPtr<QNetworkReply> reply) {
+            const auto icon = cacheIcon(url, reply->readAll());
+            return icon;
         });
     }
 }
 
-void IconLoader::load(const QVector<QUrl> &urls, Callback &&callback)
+Future<QIcon> IconLoader::load(const QVector<QUrl> &urls)
 {
     struct SharedState {
         int runningTasks = 0;
-        Callback callback;
+        Promise<QIcon> promise;
         QIcon result;
 
         void done(const QIcon &icon) {
@@ -37,14 +51,14 @@ void IconLoader::load(const QVector<QUrl> &urls, Callback &&callback)
 
             --runningTasks;
             if (runningTasks == 0) {
-                callback(result);
+                promise.setResult(result);
             }
         }
     };
 
-    auto sharedState = std::make_shared<SharedState>(SharedState{urls.size(), std::move(callback), QIcon{}});
+    auto sharedState = std::make_shared<SharedState>(SharedState{urls.size(), Promise<QIcon>{}, QIcon{}});
     for (const auto &url : urls) {
-        load(url, [sharedState](const QIcon &icon) {
+        load(url).then([sharedState](const QIcon &icon) {
             sharedState->done(icon);
         });
     }
@@ -54,13 +68,29 @@ void IconLoader::load(const QVector<QUrl> &urls, Callback &&callback)
 
 std::optional<QIcon> IconLoader::loadFromCache(const QUrl &url)
 {
-    // TODO
+    const auto cachedir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    if (QDir{cachedir}.exists(url.fileName())) {
+        QPixmap pixmap{cachedir + QDir::separator() + url.fileName()};
+        if (!pixmap.isNull()) {
+            return pixmap;
+        }
+    }
+
     return std::nullopt;
 }
 
-void IconLoader::fetchIcon(const QUrl &url, std::function<void(QNetworkReply &)> &&callback)
+Future<UniqueQObjectPtr<QNetworkReply>> IconLoader::fetchIcon(const QUrl &url)
 {
-    // TODO
+    Promise<UniqueQObjectPtr<QNetworkReply>> promise;
+    auto future = promise.getFuture();
+
+    QNetworkRequest request(url);
+    auto reply = sNAM->get(request);
+    QObject::connect(reply, &QNetworkReply::finished,
+        [promise = std::move(promise), reply = UniqueQObjectPtr<QNetworkReply>{reply}]() mutable {
+            promise.setResult(std::move(reply));
+        });
+    return future;
 }
 
 QIcon IconLoader::cacheIcon(const QUrl &url, const QByteArray &data)

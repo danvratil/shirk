@@ -33,15 +33,19 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
 
 private:
-    TeamController &mController;
-    Environment &mEnvironment;
-
     struct Group {
         explicit Group(const QString &name): name(name) {}
 
         QString name;
         std::vector<std::unique_ptr<Conversation>> conversations;
     };
+
+    QModelIndex indexForConversation(const Conversation *conv) const;
+    QModelIndex indexForGroup(const Group *group) const;
+    Group *groupForConversation(const Conversation *conv) const;
+
+    TeamController &mController;
+    Environment &mEnvironment;
 
     std::vector<std::unique_ptr<Group>> mGroups;
 };

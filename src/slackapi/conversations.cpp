@@ -15,6 +15,7 @@ Conversation Conversation::parse(const QJsonValue &data)
     const auto chan = data.toObject();
     API_EXTRACT_STR(resp, chan, id);
     API_EXTRACT_STR(resp, chan, name);
+    API_EXTRACT_STR(resp, chan, user);
     API_EXTRACT_STR(resp, chan, name_normalized);
     API_EXTRACT_STRLIST(resp, chan, previous_names);
     API_EXTRACT_STR(resp, chan, creator);

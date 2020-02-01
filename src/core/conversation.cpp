@@ -25,7 +25,11 @@ Conversation::Type Conversation::type() const
 
 void Conversation::updateFromConversation(const SlackAPI::Conversation &conv)
 {
-    mName = conv.name;
+    if (conv.is_channel || conv.is_group) {
+        mName = conv.name;
+    } else if (conv.is_im) {
+        mUser = std::make_unique<User>(conv.user, mUserManager);
+    }
     mPreviousNames = conv.previous_names;
     mCreator = std::make_unique<User>(conv.creator, mUserManager);
     mMemberCount = conv.num_members;

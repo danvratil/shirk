@@ -40,9 +40,11 @@ void NetworkDispatcher::tryDispatchNextRequest()
 void NetworkDispatcher::dispatchRequest(Request &&data)
 {
     QNetworkRequest request(data.url);
-    std::unique_ptr<QNetworkReply, DeleteLater> reply(mNam.get(request));
+    qCDebug(LOG_CORE) << "Sending request to" << data.url;
+    UniqueQObjectPtr<QNetworkReply> reply{mNam.get(request)};
     connect(reply.get(), &QNetworkReply::finished,
             this, [this, reply = reply.get(), request = std::move(data)]() mutable {
+                qCDebug(LOG_CORE) << "Received response for" << reply->url();
                 const auto rawData = reply->readAll();
                 const auto json = QJsonDocument::fromJson(rawData);
                 if (!json[QStringLiteral("ok")].toBool()) {

@@ -2,7 +2,7 @@
 
 #include "usermanager.h"
 #include "conversationsmodel.h"
-#include "utils/compat.h"
+#include "utils/memory.h"
 
 #include <QObject>
 

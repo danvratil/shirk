@@ -89,8 +89,7 @@ struct SharedState<void> : public SharedStateBase
 };
 
 class SharedStateObserver {
-    template<typename T> friend class Promise;
-protected:
+public:
     virtual void notify(detail::SharedStateBase *) {};
 };
 
@@ -108,6 +107,12 @@ struct continuation_traits
 {
     using future_type = typename future_type<std::invoke_result_t<F, Arg ...>>::type;
 };
+
+template<typename U>
+struct is_future : std::false_type {};
+
+template<typename U>
+struct is_future<Future<U>> : std::true_type {};
 
 } // namespace detail
 
@@ -151,26 +156,37 @@ public:
         return mState->getResult();
     }
 
-    struct voidT_t {};
-    struct voidVoid_t {};
-    struct futureUT_t {};
-    struct futureUVoid_t {};
-
     // F is void(T)
+    struct voidT_t {};
     template<typename F, typename = std::enable_if_t<std::is_void_v<std::invoke_result_t<F, T>>>>
     Future<void> then(F &&cb, voidT_t = {});
 
     // F is void()
+    struct voidVoid_t {};
     template<typename F, typename = std::enable_if_t<std::is_void_v<std::invoke_result_t<F>>>>
     Future<void> then(F &&cb, voidVoid_t = {});
 
     // F is Future<U>(T)
+    struct futureUT_t {};
     template<typename F, typename U = typename std::invoke_result_t<F, T>::ResultType>
     Future<U> then(F &&cb, futureUT_t = {});
 
     // F is Future<U>()
+    struct futureUVoid_t {};
     template<typename F, typename U = typename std::invoke_result_t<F>::ResultType>
     Future<U> then(F &&cb, futureUVoid_t = {});
+
+    // F is U(T)
+    struct uT_t {};
+    template<typename F, typename U = typename std::invoke_result_t<F, T>,
+             typename = std::enable_if_t<!detail::is_future<U>::value>>
+    Future<U> then(F &&cb, uT_t = {});
+
+    // F is U()
+    struct uVoid_t {};
+    template<typename F, typename U = typename std::invoke_result_t<F>,
+             typename = std::enable_if_t<!detail::is_future<U>::value>>
+    Future<U> then(F &&cb, uVoid_t = {});
 
 private:
     template<typename U> friend class Promise;
@@ -184,6 +200,21 @@ private:
     std::shared_ptr<detail::SharedState<T>> mState;
 };
 
+template<typename T>
+Future<T> makeReadyFuture(const T &value) {
+    Promise<T> promise;
+    auto future = promise.getFuture();
+    promise.setResult(value);
+    return future;
+}
+
+template<typename T>
+Future<T> makeReadyFuture(T &&value) {
+    Promise<T> promise;
+    auto future = promise.getFuture();
+    promise.setResult(std::move(value));
+    return future;
+}
 
 template<typename T>
 class Promise
@@ -309,8 +340,7 @@ private:
 
 template<typename T>
 template<typename F, typename>
-Future<void> Future<T>::then(F &&cb, voidT_t)
-{
+Future<void> Future<T>::then(F &&cb, voidT_t) {
     Promise<void> nextPromise;
     auto nextFuture = nextPromise.getFuture();
     mState->continuation = [cb = std::move(cb), promise = std::move(nextPromise),
@@ -323,8 +353,7 @@ Future<void> Future<T>::then(F &&cb, voidT_t)
 
 template<typename T>
 template<typename F, typename>
-Future<void> Future<T>::then(F &&cb, voidVoid_t)
-{
+Future<void> Future<T>::then(F &&cb, voidVoid_t) {
     Promise<void> nextPromise;
     auto nextFuture = nextPromise.getFuture();
     mState->continuation = [cb = std::move(cb), promise = std::move(nextPromise)]() mutable {
@@ -336,8 +365,7 @@ Future<void> Future<T>::then(F &&cb, voidVoid_t)
 
 template<typename T>
 template<typename F, typename U>
-Future<U> Future<T>::then(F &&cb, futureUT_t)
-{
+Future<U> Future<T>::then(F &&cb, futureUT_t) {
     Promise<U> nextPromise;
     auto nextFuture = nextPromise.getFuture();
     mState->continuation = [cb = std::move(cb), promise = std::move(nextPromise),
@@ -352,8 +380,7 @@ Future<U> Future<T>::then(F &&cb, futureUT_t)
 
 template<typename T>
 template<typename F, typename U>
-Future<U> Future<T>::then(F &&cb, futureUVoid_t)
-{
+Future<U> Future<T>::then(F &&cb, futureUVoid_t) {
     Promise<U> nextPromise;
     auto nextFuture = nextPromise.getFuture();
     mState->continuation = [cb = std::move(cb), promise = std::move(nextPromise)]() mutable {
@@ -364,5 +391,26 @@ Future<U> Future<T>::then(F &&cb, futureUVoid_t)
     return nextFuture;
 }
 
+template<typename T>
+template<typename F, typename U, typename>
+Future<U> Future<T>::then(F &&cb, uT_t) {
+    Promise<U> nextPromise;
+    auto nextFuture = nextPromise.getFuture();
+    mState->continuation = [cb = std::move(cb), promise = std::move(nextPromise), state = mState]() mutable {
+        promise.setResult(cb(state->getResult()));
+    };
+    return nextFuture;
+}
+
+template<typename T>
+template<typename F, typename U, typename>
+Future<U> Future<T>::then(F &&cb, uVoid_t) {
+    Promise<U> nextPromise;
+    auto nextFuture = nextPromise.getFuture();
+    mState->continuation = [cb = std::move(cb), promise = std::move(nextPromise)]() mutable {
+        promise.setResult(cb());
+    };
+    return nextFuture;
+}
 
 } // namespace

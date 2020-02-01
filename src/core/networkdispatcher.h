@@ -16,7 +16,7 @@
 #include "team.h"
 #include "future.h"
 #include "slackapi/common.h"
-#include "utils/compat.h"
+#include "utils/memory.h"
 
 namespace Shirk::Core
 {
@@ -56,7 +56,7 @@ private:
     QNetworkAccessManager mNam;
 
     std::deque<Request> mPendingRequests;
-    std::vector<std::unique_ptr<QNetworkReply, DeleteLater>> mRunningRequests;
+    std::vector<UniqueQObjectPtr<QNetworkReply>> mRunningRequests;
 };
 
 

@@ -27,20 +27,3 @@ struct hash<QString> {
 }
 #endif
 
-class QObject;
-struct DeleteLater {
-    template<typename T>
-    void operator()(T *obj) {
-        static_assert(std::is_base_of_v<QObject, T>, "DeleteLater can only be used with QObject-derived types");
-        obj->deleteLater();
-    }
-};
-
-template<typename T, typename ... Args>
-auto make_unique_qobject(Args && ... args)
-{
-    return std::unique_ptr<T, DeleteLater>(new T(std::forward<Args>(args) ...));
-}
-
-template<typename T>
-using UniqueQObjectPtr = std::unique_ptr<T, DeleteLater>;

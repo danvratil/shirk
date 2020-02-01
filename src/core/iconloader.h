@@ -1,5 +1,8 @@
 #pragma once
 
+#include "future.h"
+#include "utils/memory.h"
+
 #include <QIcon>
 
 #include <optional>
@@ -14,13 +17,12 @@ namespace Shirk::Core
 class IconLoader
 {
 public:
-    using Callback = std::function<void(const QIcon &)>;
-    static void load(const QUrl &url, Callback &&cb);
-    static void load(const QVector<QUrl> &urls, Callback &&cb);
+    static Future<QIcon> load(const QUrl &url);
+    static Future<QIcon> load(const QVector<QUrl> &urls);
 
 private:
     static std::optional<QIcon> loadFromCache(const QUrl &url);
-    static void fetchIcon(const QUrl &url, std::function<void(QNetworkReply &)> &&cb);
+    static Future<UniqueQObjectPtr<QNetworkReply>> fetchIcon(const QUrl &url);
     static QIcon cacheIcon(const QUrl &url, const QByteArray &data);
 };
 
