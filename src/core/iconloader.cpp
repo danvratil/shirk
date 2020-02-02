@@ -1,6 +1,7 @@
 #include "iconloader.h"
 #include "future.h"
 #include "utils/stringliterals.h"
+#include "core_debug.h"
 
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
@@ -62,6 +63,7 @@ Future<QIcon> IconLoader::load(const QVector<QUrl> &urls)
             sharedState->done(icon);
         });
     }
+    return sharedState->promise.getFuture();
 
 }
 
@@ -95,8 +97,19 @@ Future<UniqueQObjectPtr<QNetworkReply>> IconLoader::fetchIcon(const QUrl &url)
 
 QIcon IconLoader::cacheIcon(const QUrl &url, const QByteArray &data)
 {
-    // TODO
-    return {};
-}
+    const auto cachedir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
+    if (const auto dir = QDir{cachedir}; !dir.mkpath(cachedir)) {
+        qCWarning(LOG_CORE) << "Failed to create cache directory" << cachedir;
+    } else {
+        QFile file(cachedir + QDir::separator() + url.fileName());
+        if (!file.open(QIODevice::WriteOnly)) {
+            qCWarning(LOG_CORE, "Failed to open cache file %s: %s", qUtf8Printable(file.fileName()),
+                      qUtf8Printable(file.errorString()));
+        } else {
+            file.write(data);
+        }
+    }
 
+    return QIcon{QPixmap{data}};
+}
 

@@ -89,6 +89,8 @@ ConversationsModel::Group *ConversationsModel::groupForConversation(const Conver
     case Conversation::Type::MPIM:
         return mGroups.at(1).get();
     }
+
+    return mGroups.at(0).get();
 }
 
 int ConversationsModel::rowCount(const QModelIndex &parent) const

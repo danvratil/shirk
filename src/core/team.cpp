@@ -46,15 +46,11 @@ QIcon Team::icon() const
     if (mIcon.has_value()) {
         return *mIcon;
     } else {
-        IconLoader::load(mIconUrl, [that = const_cast<Team*>(this)](const QIcon &icon) {
-            that->mIcon = icon;
-            Q_EMIT that->teamChanged();
+        IconLoader::load(mIconUrl).then([team = const_cast<Team*>(this)](const QIcon &icon) {
+            team->mIcon = icon;
+            Q_EMIT team->teamChanged();
         });
-        if (mIcon.has_value()) {
-            return *mIcon;
-        } else {
-            return QIcon::fromTheme(QStringLiteral("image-loading-symbolic"));
-        }
+        return QIcon::fromTheme(QStringLiteral("image-loading-symbolic"));
     }
 }
 

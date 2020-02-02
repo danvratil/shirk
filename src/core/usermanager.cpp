@@ -63,8 +63,8 @@ void UserManager::requestData(User *user, DataCallback &&cb)
             .then([this](const QJsonValue &result) {
                 auto resp = SlackAPI::UserInfoResponse::parse(result);
                 IconLoader::load({resp.info.profile.image_24, resp.info.profile.image_32, resp.info.profile.image_48,
-                                  resp.info.profile.image_72, resp.info.profile.image_192, resp.info.profile.image_512 },
-                  [this, resp = std::move(resp)](const QIcon &icon) {
+                                  resp.info.profile.image_72, resp.info.profile.image_192, resp.info.profile.image_512 })
+                .then([this, resp = std::move(resp)](const QIcon &icon) {
                       const auto userId = resp.info.id;
                       qCDebug(LOG_CORE) << "Received UserInfo for user" << userId;
                       auto userData = UserData::fromAPI(resp.info);

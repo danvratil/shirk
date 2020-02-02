@@ -179,12 +179,14 @@ public:
     // F is U(T)
     struct uT_t {};
     template<typename F, typename U = typename std::invoke_result_t<F, T>,
+             typename = std::enable_if_t<!std::is_void_v<U>>,
              typename = std::enable_if_t<!detail::is_future<U>::value>>
     Future<U> then(F &&cb, uT_t = {});
 
     // F is U()
     struct uVoid_t {};
     template<typename F, typename U = typename std::invoke_result_t<F>,
+             typename = std::enable_if_t<!std::is_void_v<U>>,
              typename = std::enable_if_t<!detail::is_future<U>::value>>
     Future<U> then(F &&cb, uVoid_t = {});
 
@@ -392,7 +394,7 @@ Future<U> Future<T>::then(F &&cb, futureUVoid_t) {
 }
 
 template<typename T>
-template<typename F, typename U, typename>
+template<typename F, typename U, typename, typename>
 Future<U> Future<T>::then(F &&cb, uT_t) {
     Promise<U> nextPromise;
     auto nextFuture = nextPromise.getFuture();
@@ -403,7 +405,7 @@ Future<U> Future<T>::then(F &&cb, uT_t) {
 }
 
 template<typename T>
-template<typename F, typename U, typename>
+template<typename F, typename U, typename, typename>
 Future<U> Future<T>::then(F &&cb, uVoid_t) {
     Promise<U> nextPromise;
     auto nextFuture = nextPromise.getFuture();
