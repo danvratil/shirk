@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=Default
+Comment=Default Shirk UI package
+Type=Service
+Icon=cz.dvratil.shirk
+X-KDE-ServiceTypes=Shirk/UiPackage
+
+X-KDE-PluginInfo-Author=Daniel Vrátil
+X-KDE-PluginInfo-Email=dvratil@kde.org
+X-KDE-PluginInfo-Name=cz.dvratil.shirk.uipackages.default
+X-KDE-PluginInfo-Version=1.0
+X-KDE-PluginInfo-Website=https://github.com/danvratil/shirk
+X-KDE-PluginInfo-License=GPL v2+

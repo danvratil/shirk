@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=ServiceType
+X-KDE-ServiceType=Shirk/UiPackage
+Name=Shirk UI Packages
+Comments=Provides User Interface for Shirk

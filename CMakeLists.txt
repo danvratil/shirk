@@ -35,11 +35,14 @@ set(QT_REQUIRED_VERSION "5.11.0")
 find_package(Qt5Core ${QT_REQUIRED_VERSION} REQUIRED)
 find_package(Qt5Network ${QT_REQUIRED_VERSION} REQUIRED)
 find_package(Qt5Test ${QT_REQUIRED_VERSION} REQUIRED)
-find_package(Qt5Widgets ${QT_REQUIRED_VERSION} REQUIRED)
+find_package(Qt5Qml ${QT_REQUIRED_VERSION} REQUIRED)
 find_package(Qt5WebSockets ${QT_REQUIRED_VERSION} REQUIRED)
 
 find_package(KF5DBusAddons ${KF5_REQUIRED_VERSION} REQUIRED)
 find_package(KF5Notifications ${KF5_REQUIRED_VERSION} REQUIRED)
+find_package(KF5Kirigami2 ${KF5_REQUIRED_VERSION} REQUIRED)
+find_package(KF5Package ${KF5_REQUIRED_VERSION} REQUIRED)
+find_package(KF5I18n ${KF5_REQUIRED_VERSION} REQUIRED)
 
 
 add_definitions(
