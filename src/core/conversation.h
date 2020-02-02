@@ -100,7 +100,7 @@ public:
     QDateTime created() const { return mCreated; }
     QDateTime latestMessage() const { return mLatestMessage; }
 
-    bool isMember() const { return mIsMember; }
+    bool isMember() const;
     bool isArchive() const { return mIsArchive; }
     bool isReadOnly() const { return mIsReadOnly; }
     bool isGeneral() const { return mIsGeneral; }

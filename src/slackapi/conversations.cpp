@@ -31,6 +31,7 @@ Conversation Conversation::parse(const QJsonValue &data)
     API_EXTRACT_BOOL(resp, chan, is_member);
 
     API_EXTRACT_BOOL(resp, chan, is_archived);
+    API_EXTRACT_BOOL(resp, chan, is_channel);
     API_EXTRACT_BOOL(resp, chan, is_general);
     API_EXTRACT_BOOL(resp, chan, is_group);
     API_EXTRACT_BOOL(resp, chan, is_im);

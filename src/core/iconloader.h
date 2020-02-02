@@ -24,6 +24,8 @@ private:
     static std::optional<QIcon> loadFromCache(const QUrl &url);
     static Future<UniqueQObjectPtr<QNetworkReply>> fetchIcon(const QUrl &url);
     static QIcon cacheIcon(const QUrl &url, const QByteArray &data);
+
+    static QString nameFromUrl(const QUrl &url);
 };
 
 }

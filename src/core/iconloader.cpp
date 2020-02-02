@@ -13,18 +13,24 @@
 #include <QLoggingCategory>
 
 #include <memory>
+#include <qcryptographichash.h>
 
 using namespace Shirk;
 using namespace Shirk::Core;
 using namespace Shirk::StringLiterals;
 
-Q_LOGGING_CATEGORY(LOG_ICONLOADER, "cz.dvratil.shirk.core.IconLoader")
+Q_LOGGING_CATEGORY(LOG_ICONLOADER, "cz.dvratil.shirk.core.IconLoader", QtMsgType::QtInfoMsg)
 
 Q_GLOBAL_STATIC(QNetworkAccessManager, sNAM)
 
 Future<QIcon> IconLoader::load(const QUrl &url)
 {
+    if (!url.isValid()) {
+        return makeReadyFuture(QIcon{});
+    }
+
     if (const auto icon = loadFromCache(url); icon.has_value()) {
+        qCDebug(LOG_ICONLOADER) << "Found icon" << url << "in cache.";
         return makeReadyFuture(*icon);
     } else {
         return fetchIcon(url).then([url](UniqueQObjectPtr<QNetworkReply> reply) {
@@ -70,9 +76,11 @@ Future<QIcon> IconLoader::load(const QVector<QUrl> &urls)
 
 std::optional<QIcon> IconLoader::loadFromCache(const QUrl &url)
 {
+    Q_ASSERT(url.isValid());
+    const auto name = nameFromUrl(url);
     const auto cachedir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
-    if (QDir{cachedir}.exists(url.fileName())) {
-        QPixmap pixmap{cachedir + QDir::separator() + url.fileName()};
+    if (QDir{cachedir}.exists(name)) {
+        QPixmap pixmap{cachedir + QDir::separator() + name};
         if (!pixmap.isNull()) {
             return pixmap;
         }
@@ -83,10 +91,13 @@ std::optional<QIcon> IconLoader::loadFromCache(const QUrl &url)
 
 Future<UniqueQObjectPtr<QNetworkReply>> IconLoader::fetchIcon(const QUrl &url)
 {
+    Q_ASSERT(url.isValid());
+
     Promise<UniqueQObjectPtr<QNetworkReply>> promise;
     auto future = promise.getFuture();
 
     QNetworkRequest request(url);
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     auto reply = sNAM->get(request);
     QObject::connect(reply, &QNetworkReply::finished,
         [promise = std::move(promise), reply = UniqueQObjectPtr<QNetworkReply>{reply}]() mutable {
@@ -97,19 +108,29 @@ Future<UniqueQObjectPtr<QNetworkReply>> IconLoader::fetchIcon(const QUrl &url)
 
 QIcon IconLoader::cacheIcon(const QUrl &url, const QByteArray &data)
 {
+    Q_ASSERT(url.isValid());
+
     const auto cachedir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
     if (const auto dir = QDir{cachedir}; !dir.mkpath(cachedir)) {
-        qCWarning(LOG_CORE) << "Failed to create cache directory" << cachedir;
+        qCWarning(LOG_ICONLOADER) << "Failed to create cache directory" << cachedir;
     } else {
-        QFile file(cachedir + QDir::separator() + url.fileName());
+        const auto name = nameFromUrl(url);
+        QFile file{cachedir + QDir::separator() + name};
         if (!file.open(QIODevice::WriteOnly)) {
-            qCWarning(LOG_CORE, "Failed to open cache file %s: %s", qUtf8Printable(file.fileName()),
+            qCWarning(LOG_ICONLOADER, "Failed to open cache file %s: %s", qUtf8Printable(file.fileName()),
                       qUtf8Printable(file.errorString()));
         } else {
             file.write(data);
+            qCDebug(LOG_ICONLOADER) << "Added icon" << url << "to local cache as" << name;
         }
     }
 
     return QIcon{QPixmap{data}};
 }
 
+QString IconLoader::nameFromUrl(const QUrl &url)
+{
+    return QString::fromLatin1(
+            QCryptographicHash::hash(url.toString().toUtf8(), QCryptographicHash::Md5).toHex())
+           + u".png"_qs;
+}

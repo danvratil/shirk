@@ -1,5 +1,6 @@
 #include "conversation.h"
 #include "slackapi/conversations.h"
+#include "core_debug.h"
 
 using namespace Shirk::Core;
 
@@ -8,8 +9,7 @@ Conversation::Conversation(const QString &id, UserManager &userManager)
     , mUserManager(userManager)
 {}
 
-Conversation::Type Conversation::type() const
-{
+Conversation::Type Conversation::type() const {
     if (mIsChannel) {
         return Type::Channel;
     } else if (mIsGroup) {
@@ -23,12 +23,13 @@ Conversation::Type Conversation::type() const
     return Type::Channel;
 }
 
-void Conversation::updateFromConversation(const SlackAPI::Conversation &conv)
-{
+void Conversation::updateFromConversation(const SlackAPI::Conversation &conv) {
     if (conv.is_channel || conv.is_group) {
         mName = conv.name;
     } else if (conv.is_im) {
         mUser = std::make_unique<User>(conv.user, mUserManager);
+    } else if (conv.is_mpim) {
+        qCWarning(LOG_CORE) << "Unsupported conversation type MPIM!";
     }
     mPreviousNames = conv.previous_names;
     mCreator = std::make_unique<User>(conv.creator, mUserManager);
@@ -60,3 +61,12 @@ void Conversation::updateFromConversation(const SlackAPI::Conversation &conv)
     Q_EMIT unreadCountChanged();
     Q_EMIT latestMessageChanged();
 }
+
+bool Conversation::isMember() const {
+    if (mIsIM || mIsMPIM) {
+        return true;
+    }
+
+    return mIsMember;
+}
+
