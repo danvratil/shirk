@@ -27,7 +27,7 @@ struct UserData
     QString email;
     QString timeZone;
     QString timeZoneLabel;
-    QIcon avatar;
+    QIcon avatar = {};
     QColor color;
     QDateTime updated;
     bool isDeleted = false;
@@ -35,7 +35,7 @@ struct UserData
     bool isOwner = false;
     bool isBot = false;
 
-    QIcon avatarCache;
+    QIcon avatarCache = {};
 
     static UserData fromAPI(const SlackAPI::UserInfo &user);
 };

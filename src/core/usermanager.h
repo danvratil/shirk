@@ -10,7 +10,7 @@ namespace Shirk::Core
 {
 
 class Team;
-class Environment;
+struct Environment;
 
 class UserManager : public QObject
 {

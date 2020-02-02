@@ -26,7 +26,7 @@ class Team : public QObject
     Q_PROPERTY(QString domain READ domain NOTIFY teamChanged)
     Q_PROPERTY(QIcon icon READ icon NOTIFY teamChanged)
     Q_PROPERTY(QString accessToken READ accessToken NOTIFY teamChanged)
-    Q_PROPERTY(QString botAccessToken READ botAccessToken NOTIFY teamChanged);
+    Q_PROPERTY(QString botAccessToken READ botAccessToken NOTIFY teamChanged)
 
 public:
     Team(const QString &id, const QString &name, const QString &accessToken, const QString &botAccessToken);

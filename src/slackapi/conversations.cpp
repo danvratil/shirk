@@ -78,7 +78,7 @@ QUrlQuery ConversationsListRequest::serialize() const
             break;
         }
     }
-    query.addQueryItem(u"types"_qs, type_str.join(','));
+    query.addQueryItem(u"types"_qs, type_str.join(QLatin1Char(',')));
 
     return query;
 }

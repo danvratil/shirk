@@ -4,6 +4,7 @@
 #include "iconloader.h"
 #include "slackapi/user.h"
 #include "core_debug.h"
+#include "utils/compiler.h"
 #include <functional>
 
 using namespace Shirk::Core;
@@ -58,7 +59,9 @@ void UserManager::requestData(User *user, DataCallback &&cb)
         qCDebug(LOG_CORE) << "Requesting UserInfo for user" << user->id();
         mPendingRequests.emplace_back(PendingRequest{user->id(), {{user, std::move(cb)}}});
 
+compiler_suppress_warning("-Wmissing-field-initializers") // FIXME: Overly-sensitive GCC
         SlackAPI::UserInfoRequest request{.id = user->id()};
+compiler_restore_warning("-Wmissing-field-initializers")
         mEnvironment.networkDispatcher.sendRequest(mTeam, std::move(request))
             .then([this](const QJsonValue &result) {
                 auto resp = SlackAPI::UserInfoResponse::parse(result);

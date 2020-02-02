@@ -8,7 +8,7 @@
 
 namespace Shirk::Core {
 
-class Environment;
+struct Environment;
 
 class TeamsModel : public QAbstractListModel
 {

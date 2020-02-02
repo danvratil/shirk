@@ -125,7 +125,9 @@ QIcon IconLoader::cacheIcon(const QUrl &url, const QByteArray &data)
         }
     }
 
-    return QIcon{QPixmap{data}};
+    QPixmap pixmap;
+    pixmap.loadFromData(data);
+    return {pixmap};
 }
 
 QString IconLoader::nameFromUrl(const QUrl &url)

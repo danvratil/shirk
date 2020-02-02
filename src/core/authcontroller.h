@@ -19,7 +19,7 @@ class OAuthAccessResponse;
 
 namespace Shirk::Core {
 
-class Environment;
+struct Environment;
 
 class AuthController : public QObject
 {

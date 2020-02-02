@@ -23,7 +23,7 @@ public:
         IM
     };
 
-    QString cursor;
+    QString cursor = {};
     bool exclude_archived = false;
     int limit = 100;
     QVector<Type> types = {Type::PublicChannel};

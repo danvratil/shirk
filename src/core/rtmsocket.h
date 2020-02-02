@@ -9,7 +9,7 @@
 
 namespace Shirk::SlackAPI::RTM
 {
-class Event;
+struct Event;
 }
 
 namespace Shirk::Core

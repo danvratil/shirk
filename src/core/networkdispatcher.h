@@ -52,7 +52,7 @@ private:
     template<typename Msg>
     std::optional<QString> getTokenForMsg(const Team &team);
 
-    int mMaxRunningRequests = 5;
+    std::size_t mMaxRunningRequests = 5;
     QNetworkAccessManager mNam;
 
     std::deque<Request> mPendingRequests;

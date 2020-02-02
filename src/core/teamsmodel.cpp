@@ -38,7 +38,7 @@ int TeamsModel::rowCount(const QModelIndex &parent) const
 
 QVariant TeamsModel::data(const QModelIndex &index, int role) const
 {
-    if (index.row() < 0 || index.row() >= mControllers.size() || index.column() != 0) {
+    if (index.row() < 0 || index.row() >= static_cast<int>(mControllers.size()) || index.column() != 0) {
         return {};
     }
 
@@ -57,7 +57,7 @@ QVariant TeamsModel::data(const QModelIndex &index, int role) const
 
 TeamController &TeamsModel::controllerForIndex(const QModelIndex &index) const
 {
-    Q_ASSERT(index.row() >= 0 && index.row() < mControllers.size());
+    Q_ASSERT(index.row() >= 0 && index.row() < static_cast<int>(mControllers.size()));
 
     return *mControllers[index.row()].get();
 }

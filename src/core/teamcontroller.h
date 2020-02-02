@@ -11,7 +11,7 @@
 namespace Shirk::Core {
 
 class Team;
-class Environment;
+struct Environment;
 class ConversationsModel;
 class RTMController;
 

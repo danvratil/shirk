@@ -62,7 +62,7 @@ void AuthController::startServer()
         return;
     }
     connect(mServer.get(), &QTcpServer::acceptError,
-            this, [this](QAbstractSocket::SocketError error) {
+            this, [this](QAbstractSocket::SocketError) {
                 setError(tr("Error during authentication: %1").arg(mServer->errorString()));
             });
 }

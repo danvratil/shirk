@@ -13,7 +13,7 @@
 using namespace Shirk::Core;
 using namespace Shirk::StringLiterals;
 
-NetworkDispatcher::NetworkDispatcher(Config &config)
+NetworkDispatcher::NetworkDispatcher(Config &)
 {}
 
 NetworkDispatcher::~NetworkDispatcher() = default;

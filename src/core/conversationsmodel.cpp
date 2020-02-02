@@ -4,6 +4,7 @@
 #include "networkdispatcher.h"
 #include "slackapi/conversations.h"
 #include "utils/memory.h"
+#include "utils/compiler.h"
 
 #include <memory>
 #include <qnamespace.h>
@@ -34,12 +35,15 @@ Future<void> ConversationsModel::populate()
 {
     Promise<void> promise;
     auto future = promise.getFuture();
+// FIXME: I suspect this is just GCC being overly-sensitive
+compiler_suppress_warning("-Wmissing-field-initializers")
     SlackAPI::ConversationsListRequest request{
         .types = {SlackAPI::ConversationsListRequest::Type::PublicChannel,
                   SlackAPI::ConversationsListRequest::Type::PrivateChannel,
                   SlackAPI::ConversationsListRequest::Type::MPIM,
                   SlackAPI::ConversationsListRequest::Type::IM}
     };
+compiler_restore_warning("-Wmissing-field-initializers")
     mEnvironment.networkDispatcher.sendRequest(mController.team(), std::move(request))
         .then([this, promise = std::move(promise)](const QJsonValue &value) mutable {
             const auto resp = SlackAPI::ConversationsListResponse::parse(value);
@@ -122,7 +126,8 @@ int ConversationsModel::columnCount(const QModelIndex &parent) const
 QModelIndex ConversationsModel::index(int row, int column, const QModelIndex &parent) const
 {
     if (isRoot(parent)) {
-        if (row < 0 || row >= mGroups.size() || column < 0 || column >= columnCount(parent)) {
+        if (row < 0 || row >= static_cast<int>(mGroups.size())
+                || column < 0 || column >= columnCount(parent)) {
             return {};
         }
         return createIndex(row, column, nullptr);
@@ -130,7 +135,8 @@ QModelIndex ConversationsModel::index(int row, int column, const QModelIndex &pa
 
     if (isGroup(parent)) {
         const auto &parentGroup = mGroups.at(parent.row());
-        if (row < 0 || row >= parentGroup->conversations.size() || column < 0 || column >= columnCount(parent)) {
+        if (row < 0 || row >= static_cast<int>(parentGroup->conversations.size())
+                || column < 0 || column >= columnCount(parent)) {
             return {};
         }
         return createIndex(row, column, mGroups.at(parent.row()).get());
@@ -187,6 +193,7 @@ QVariant ConversationsModel::data(const QModelIndex &index, int role) const
                 case Conversation::Type::MPIM:
                     return conversation->user()->name();
                 }
+                return {};
             case 1:
                 return conversation->unreadCountDisplay();
             }

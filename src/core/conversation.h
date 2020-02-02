@@ -9,7 +9,7 @@
 Q_DECLARE_METATYPE(Shirk::Core::User *)
 
 namespace Shirk::SlackAPI {
-class Conversation;
+struct Conversation;
 }
 
 namespace Shirk::Core

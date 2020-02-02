@@ -34,7 +34,7 @@ RTMSocket::RTMSocket(const QUrl &url)
                     mEventQueue.push_back(SlackAPI::RTM::parseEvent(doc.object()));
                     Q_EMIT eventsAvailable();
                 } catch (const SlackAPI::RTM::EventException &e) {
-                    Q_EMIT error(u"Error when parsing RTM event: %1"_qs.arg(e.what()));
+                    Q_EMIT error(u"Error when parsing RTM event: %1"_qs.arg(QString::fromUtf8(e.what())));
                 }
             });
     connect(&mSocket, &QWebSocket::stateChanged, this,

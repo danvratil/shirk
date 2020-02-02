@@ -90,6 +90,7 @@ struct SharedState<void> : public SharedStateBase
 
 class SharedStateObserver {
 public:
+    virtual ~SharedStateObserver() = default;
     virtual void notify(detail::SharedStateBase *) {};
 };
 
@@ -136,7 +137,7 @@ public:
         return *this;
     }
 
-    ~Future() = default;
+    ~Future() override = default;
 
     std::optional<QString> error() const {
         return mState->error;
@@ -314,7 +315,7 @@ public:
     FutureWatcher &operator=(FutureWatcher &&) = default;
     FutureWatcher(const FutureWatcher &) = delete;
     FutureWatcher &operator=(const FutureWatcher &) = delete;
-    ~FutureWatcher();
+    ~FutureWatcher() override;
 
     template<typename U>
     void operator()(Future<U> &&future) {

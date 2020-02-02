@@ -248,7 +248,7 @@ struct ChannelTopicMessageEvent : public MessageEvent
 
 struct ChannelUnarchiveMessageEvent : public MessageEvent
 {
-    SHIRK_MESSAGE_EVENT(ChannelUnarchiveMessageEvent, ChannelUnarchive, "channel_unarchive");
+    SHIRK_MESSAGE_EVENT(ChannelUnarchiveMessageEvent, ChannelUnarchive, "channel_unarchive")
 };
 
 struct EKMAccessDeniedMessageEvent : public MessageEvent

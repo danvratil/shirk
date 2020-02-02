@@ -33,7 +33,7 @@ void FutureWatcher::addSharedState(std::shared_ptr<detail::SharedStateBase> stat
 
 bool FutureWatcher::isFinished() const
 {
-    return mErrors.size() + mFinished == mStates.size();
+    return mErrors.size() + mFinished == static_cast<int>(mStates.size());
 }
 
 void FutureWatcher::notify(detail::SharedStateBase *state)
